@@ -1,0 +1,27 @@
+﻿## Ignore build output
+bin/
+obj/
+
+## User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Visual Studio
+.vs/
+
+## Logs
+*.log
+
+## ASP.NET Secret files
+secrets.json
+appsettings.Development.json
+
+## EF Core
+Migrations/
+
+## Other
+*.db
+*.db-shm
+*.db-wal
