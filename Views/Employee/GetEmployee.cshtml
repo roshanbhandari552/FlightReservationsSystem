@@ -1,0 +1,35 @@
+﻿@using FlightReservationSystem.Models
+@model List<ApplicationUser>
+
+
+
+@{
+    ViewData["Title"] = "Employee List";
+}
+
+<h2>Employee List</h2>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+           
+            <th>Email</th>
+            <th>FirstName</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var emp in Model)
+        {
+            <tr>
+              
+                <td>@emp.UserName</td>
+                <td>@emp.FirstName</td>
+                <td>
+                    <a asp-controller="Employee" asp-action="Edit" asp-route-id="@emp.Id" class="btn btn-primary btn-sm">Edit</a>
+                    <a asp-controller="Employee" asp-action="Delete" asp-route-id="@emp.Id" class="btn btn-danger btn-sm">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Models;
 
 namespace WebApplication1.Controllers
@@ -12,10 +13,13 @@ namespace WebApplication1.Controllers
             _context = context;
         }
 
-        public IActionResult Index()
+        [HttpGet]
+        [Authorize]
+        public IActionResult GetEmployee()
         {
-            var flights = _context.Employees.ToList();
-            return View(flights);
+            var employees = _context.Users.ToList();
+            Console.WriteLine("Users count: " + employees.Count);
+            return View(employees);
         }
     }
 }

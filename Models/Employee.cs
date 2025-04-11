@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 namespace WebApplication1.Models
 {
@@ -13,6 +14,7 @@ namespace WebApplication1.Models
 
         [Required]
         [EmailAddress]
+        [Remote(action: "IsEmailAvailable", controller:"Account")]
         [Display(Name = "Email")]
         public string Email { get; set; }
     
