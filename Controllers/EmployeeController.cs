@@ -4,6 +4,7 @@ using WebApplication1.Models;
 
 namespace WebApplication1.Controllers
 {
+    [Authorize]
     public class EmployeeController : Controller
     {
         private readonly AppDbContext _context;
@@ -14,7 +15,8 @@ namespace WebApplication1.Controllers
         }
 
         [HttpGet]
-        [Authorize]
+
+        [AllowAnonymous]
         public IActionResult GetEmployee()
         {
             var employees = _context.Users.ToList();
