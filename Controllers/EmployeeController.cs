@@ -16,7 +16,7 @@ namespace WebApplication1.Controllers
 
         [HttpGet]
 
-        [AllowAnonymous]
+        
         public IActionResult GetEmployee()
         {
             var employees = _context.Users.ToList();

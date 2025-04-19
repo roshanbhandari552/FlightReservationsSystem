@@ -1,6 +1,7 @@
 ﻿using Azure.Identity;
 using FlightReservationSystem.Models;
 using FlightReservationSystem.ViewModel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
@@ -75,26 +76,40 @@ namespace FlightReservationSystem.Controllers
             }
         }
 
-            [HttpGet]
-        public IActionResult Login()
+        [HttpGet]
+      
+        public IActionResult Login(string returnUrl = null)
         {
+            ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login(LoginViewModel model)
+        public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
         {
+            ViewData["ReturnUrl"] = returnUrl;
+            Console.WriteLine("Return URL: " + returnUrl);
+
             if (ModelState.IsValid)
             {
+               
 
                 var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, false);
 
                 if (result.Succeeded)
                 {
-                    /*ViewBag.successMessage = "Registration Successfully";*/
+                    if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                    {
 
 
-                    return RedirectToAction("Index");
+                        /*ViewBag.successMessage = "Registration Successfully";*/
+                        return Redirect(returnUrl);
+                    }                 
+               
+                    else
+                    {
+                        return RedirectToAction("Index", "home");
+                    }
                 }
 
 

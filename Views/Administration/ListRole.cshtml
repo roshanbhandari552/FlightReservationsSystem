@@ -1,0 +1,49 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+
+@model IEnumerable<Microsoft.AspNetCore.Identity.IdentityRole>
+
+@{
+    ViewData["Title"] = "List Roles";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+@if (Model.Any())
+{
+    <p><strong>Available Roles:</strong></p>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Role Name</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var role in Model)
+            {
+                <tr>
+                    <td>@role.Name</td>
+                    <td>
+                        <!-- You can add Edit/Delete actions here -->
+                        <a class="btn btn-sm btn-primary" asp-controller="Administration" asp-action="EditRole" asp-route-id="@role.Id">Edit</a>
+                        <a class="btn btn-sm btn-danger" asp-controller="Administration" asp-action="DeleteRole" asp-route-id="@role.Id">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <div class="alert alert-info">
+        No roles available. Click the button below to create a role.
+    </div>
+
+    <a asp-controller="Administration" asp-action="CreateRole" class="btn btn-success">Create Role</a>
+}
