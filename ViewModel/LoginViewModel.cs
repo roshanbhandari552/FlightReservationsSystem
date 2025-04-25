@@ -4,8 +4,6 @@ namespace FlightReservationSystem.ViewModel
 {
     public class LoginViewModel
     {
-
-
       
         public string Email { get; set; }
 

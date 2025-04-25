@@ -23,5 +23,7 @@ namespace WebApplication1.Controllers
             Console.WriteLine("Users count: " + employees.Count);
             return View(employees);
         }
+
+       
     }
 }

@@ -30,7 +30,7 @@ namespace FlightReservationSystem.Controllers
         {
             if (ModelState.IsValid)
             {
-                var user = new ApplicationUser { FirstName = model.FirstName, UserName = model.Email };
+                var user = new ApplicationUser { FirstName = model.FirstName, Email = model.Email, UserName = model.Email };
                 var result = await _userManager.CreateAsync(user, model.Password);
 
                 if (result.Succeeded)
@@ -62,7 +62,85 @@ namespace FlightReservationSystem.Controllers
             return View(user);
         }
 
-        [AcceptVerbs("GET", "POST")]
+        [HttpGet]
+        public async Task<IActionResult> EditUser (string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if(user == null)
+            {
+                ViewBag.error = "Error";
+                return View("NotFound", "Administration");
+            }
+            var editUserViewModel = new EditUserViewModel
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                Email = user.UserName
+            };
+
+            return View(editUserViewModel);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditUser(EditUserViewModel model, string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+            {
+                ViewBag.error = "Error";
+                return View("NotFound", "Administration");
+            }
+            else
+            {
+                user.FirstName = model.FirstName;
+                user.UserName = model.Email;
+                
+                var result = await _userManager.UpdateAsync(user);
+
+                if (result.Succeeded)
+                {
+                    return RedirectToAction("User");
+                }
+           
+                foreach(var error in result.Errors)
+                {
+                    ModelState.AddModelError("", error.Description);
+                }
+                
+                    }
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteUser( string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            
+            if(user == null)
+            {
+                ViewBag.error = "Error";
+                return View("NotFound", "Administration");
+            }
+
+           
+                var result = await _userManager.DeleteAsync(user);
+
+            if (result.Succeeded)
+            {
+                return RedirectToAction("User");
+            }
+
+            foreach(var error in result.Errors)
+            {
+                ModelState.AddModelError("", error.Description);
+            }
+            return RedirectToAction("EditUser", new { id = id });
+
+
+        }
+
+            [AcceptVerbs("GET", "POST")]
         public async Task<IActionResult> IsEmailAvailable(String email)
         { 
            var user = await _userManager.FindByEmailAsync(email);

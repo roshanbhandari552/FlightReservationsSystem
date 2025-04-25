@@ -10,7 +10,8 @@
 <div class="card">
     <div class="card-body">
         <form asp-action="EditRole" method="post">
-            <input type="hidden" asp-for="Id" />
+            <label asp-for="Id"></label>
+            <input asp-for="Id" class="form-control" disabled />
 
             <div class="form-group">
                 <label asp-for="Name"></label>
@@ -37,6 +38,11 @@
 
             <button type="submit" class="btn btn-primary">Save</button>
             <a asp-action="ListRole" class="btn btn-secondary">See the Admin</a>
+
+            <div asp-validation-summary="All" class="text-danger"></div>
+            @* <a asp-action="EditUserInRole" asp-controller="Administration" class="btn btn-secondary">Add or Remove User</a> *@
+            <a class="btn btn-sm btn-primary" asp-controller="Administration" asp-action="EditUsersInRole" asp-route-roleId="@Model.Id">Add or Remove User</a>
+
         </form>
     </div>
 </div>
