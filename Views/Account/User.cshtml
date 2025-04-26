@@ -14,6 +14,12 @@
                 </li>
                 
             </ul>
+
+            <!-- 🔍 Search box (right side of navbar) -->
+            <form asp-action="SearchUsers" method="get" class="d-flex">
+                <input class="form-control me-2" type="search" name="query" placeholder="Search users..." aria-label="Search">
+                <button class="btn btn-outline-primary" type="submit">Search</button>
+            </form>
         </div>
     </div>
 </nav>

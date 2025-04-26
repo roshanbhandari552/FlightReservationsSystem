@@ -16,5 +16,7 @@ namespace FlightReservationSystem.ViewModel
         [Remote(action: "IsEmailAvailable", controller: "Account")]
         [Display(Name = "Email")]
         public string Email { get; set; }
+
+        public List<String> Roles { get; set; } 
     }
 }

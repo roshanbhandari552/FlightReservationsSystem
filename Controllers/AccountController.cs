@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.EntityFrameworkCore;
 using WebApplication1.Models;
 
 namespace FlightReservationSystem.Controllers
@@ -140,7 +141,26 @@ namespace FlightReservationSystem.Controllers
 
         }
 
-            [AcceptVerbs("GET", "POST")]
+        [HttpGet]
+        public async Task<IActionResult> SearchUsers(string query)
+        {
+            List<ApplicationUser> users;
+
+            if (!string.IsNullOrEmpty(query))
+            {
+                users = await _userManager.Users
+                    .Where(u => u.UserName.Contains(query) || u.Email.Contains(query))
+                    .ToListAsync();
+            }
+            else
+            {
+                users = await _userManager.Users.ToListAsync();
+            }
+
+            return View("User", users); // 👈 reuse your existing view
+        }
+
+        [AcceptVerbs("GET", "POST")]
         public async Task<IActionResult> IsEmailAvailable(String email)
         { 
            var user = await _userManager.FindByEmailAsync(email);

@@ -21,13 +21,31 @@
         <label asp-for="Email" class="form-label"></label>
         <input asp-for="Email" class="form-control" />
         <span asp-validation-for="Email" class="text-danger"></span>
-        <p>Debug Email: @Model.Email</p>
+    </div>
 
+    <div class="form-group mb-3">
+        <label class="form-label">User Roles</label>
+        @if (Model.Roles != null && Model.Roles.Any())
+        {
+            <ul class="list-group">
+                @foreach (var role in Model.Roles)
+                {
+                    <li class="list-group-item">@role</li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p class="text-muted">No roles assigned.</p>
+        }
     </div>
 
     <div class="form-group mt-4">
         <button type="submit" class="btn btn-primary">Save</button>
         <a asp-action="User" class="btn btn-secondary ms-2">Cancel</a>
+        <a asp-controller="Administration" asp-action="ManageUserRoles" asp-route-userId="@Model.Id" class="btn btn-outline-info ms-2">
+            Manage Roles
+        </a>
     </div>
 </form>
 
