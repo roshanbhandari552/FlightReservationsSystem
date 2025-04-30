@@ -140,24 +140,36 @@ namespace FlightReservationSystem.Controllers
 
 
         }
+        /*
+                [HttpGet]
+                public async Task<IActionResult> SearchUsers(string query)
+                {
+                    List<ApplicationUser> users;
+
+                    if (!string.IsNullOrEmpty(query))
+                    {
+                        users = await _userManager.Users
+                            .Where(u => u.UserName.Contains(query) || u.FirstName.Contains(query))
+                            .ToListAsync();
+                    }
+                    else
+                    {
+                        users = await _userManager.Users.ToListAsync();
+                    }
+
+                    return PartialView("UserPartial", users); // 👈 reuse your existing view
+                }*/
 
         [HttpGet]
         public async Task<IActionResult> SearchUsers(string query)
         {
-            List<ApplicationUser> users;
-
-            if (!string.IsNullOrEmpty(query))
-            {
-                users = await _userManager.Users
+            var users = string.IsNullOrWhiteSpace(query)
+                ? await _userManager.Users.ToListAsync()
+                : await _userManager.Users
                     .Where(u => u.UserName.Contains(query) || u.Email.Contains(query))
                     .ToListAsync();
-            }
-            else
-            {
-                users = await _userManager.Users.ToListAsync();
-            }
 
-            return View("User", users); // 👈 reuse your existing view
+            return PartialView("UserPartial", users);
         }
 
         [AcceptVerbs("GET", "POST")]
