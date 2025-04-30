@@ -1,0 +1,67 @@
+﻿@model IEnumerable<FlightReservationSystem.Models.Airport>
+
+@{
+    ViewData["Title"] = "Airports";
+}
+
+<div class="container mt-4">
+    <!-- Centered Title -->
+    <div class="text-center mb-4">
+        <h2 class="fw-bold">Airport List</h2>
+    </div>
+
+   
+    <div class="d-flex justify-content-between align-items-center mb-3" style="max-width: 720px; margin: 0 auto;">
+        <a asp-action="Create" class="btn btn-success btn-sm">
+            + Add New Airport
+        </a>
+
+      @*   <div class="input-group input-group-sm" style="width: 250px;">
+            <input type="text" id="airportSearchBox" class="form-control" placeholder="Search...">
+            <button id="searchBtn" class="btn btn-outline-dark" type="button">Search</button>
+        </div> *@
+    </div>
+
+    <!-- Table -->
+    <div class="card shadow-sm" style="max-width: 720px; margin: 0 auto;">
+        <table class="table table-bordered table-hover align-middle mb-0">
+            <thead class="table-dark text-center">
+                <tr>
+                    <th>Airport</th>
+                    <th>Code</th>
+                    <th>City</th>
+                    <th>Country</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var airport in Model)
+                {
+                    <tr>
+                        <td>@(airport?.Name ?? "N/A")</td>
+                        <td>@(airport?.Code ?? "N/A")</td>
+                        <td>@(airport?.City ?? "N/A")</td>
+                        <td>@(airport?.Country ?? "N/A")</td>
+                        <td class="text-center">
+                            <form asp-action="Delete" asp-route-id="@airport.Id" method="post" class="d-inline">
+                                <a asp-action="Edit" asp-route-id="@airport.Id" class="btn btn-sm btn-outline-secondary me-1">Edit</a>
+                                <a href="#" class="btn btn-sm btn-danger" onclick="showConfirm('@airport.Id')">Delete</a>
+
+                                <!-- Confirm Delete (optional inline toggle if needed) -->
+                                <span id="ConfirmDeleteSpan_@airport.Id" style="display:none">
+                                    <span class="text-danger fw-bold me-2">Are you sure?</span>
+                                    <button type="submit" class="btn btn-danger btn-sm">Yes</button>
+                                    <a href="#" class="btn btn-secondary btn-sm" onclick="hideConfirm('@airport.Id')">No</a>
+                                </span>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/airport.js" asp-append-version="true"></script>
+}
