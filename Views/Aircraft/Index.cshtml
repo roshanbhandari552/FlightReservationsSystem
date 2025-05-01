@@ -1,0 +1,66 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@model IEnumerable<FlightReservationSystem.Models.Aircraft>
+
+@{
+    ViewData["Title"] = "Aircrafts";
+}
+
+<div class="container mt-4">
+    <!-- Centered Title -->
+    <div class="text-center mb-4">
+        <h2 class="fw-bold">Aircraft List</h2>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3" style="max-width: 720px; margin: 0 auto;">
+        <a asp-action="Create" class="btn btn-success btn-sm">
+            + Add New Aircraft
+        </a>
+    </div>
+
+    <!-- Table -->
+    <div class="card shadow-sm" style="max-width: 720px; margin: 0 auto;">
+        <table class="table table-bordered table-hover align-middle mb-0">
+            <thead class="table-dark text-center">
+                <tr>
+                    <th>Model</th>
+                    <th>Capacity</th>
+                    <th>Manufacturer</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var aircraft in Model)
+                {
+                    <tr>
+                        <td>@(aircraft?.Model ?? "N/A")</td>                      
+                        <td>@(aircraft.Capacity)</td>
+                        <td>@(aircraft?.Manufacturer ?? "N/A")</td>
+                        <td class="text-center">
+                            <form asp-action="Delete" asp-route-id="@aircraft.Id" method="post" class="d-inline">
+                                <a asp-action="Edit" asp-route-id="@aircraft.Id" class="btn btn-sm btn-outline-secondary me-1">Edit</a>
+                                <span id="deletespan_@aircraft.Id">
+                                    <a href="#" class="btn btn-sm btn-danger" onclick="showConfirm('@aircraft.Id')">Delete</a>
+                                </span>
+
+                                <!-- Confirm Delete -->
+                                <span id="ConfirmDeleteSpan_@aircraft.Id" style="display:none">
+                                    <span class="text-danger fw-bold me-2">Are you sure?</span>
+                                    <button type="submit" class="btn btn-danger btn-sm">Yes</button>
+                                    <a href="#" class="btn btn-secondary btn-sm" onclick="hideConfirm('@aircraft.Id')">No</a>
+                                </span>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/aircraft.js" asp-append-version="true"></script>
+}
