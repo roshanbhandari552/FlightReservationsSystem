@@ -1,0 +1,43 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@model FlightReservationSystem.ViewModel.AircraftViewModel
+
+@{
+    ViewData["Title"] = "Create Aircraft";
+}
+
+<h2>Create Aircraft</h2>
+
+<form asp-action="Create" method="post" class="mt-4">
+    <div asp-validation-summary="All" class="text-danger"></div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Model" class="form-label"></label>
+        <input asp-for="Model" class="form-control" />
+        <span asp-validation-for="Model" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Capacity" class="form-label"></label>
+        <input asp-for="Capacity" class="form-control" type="number" />
+        <span asp-validation-for="Capacity" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Manufacturer" class="form-label"></label>
+        <input asp-for="Manufacturer" class="form-control" />
+        <span asp-validation-for="Manufacturer" class="text-danger"></span>
+    </div>
+
+   
+
+    <button type="submit" class="btn btn-success">Save</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

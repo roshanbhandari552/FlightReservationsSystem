@@ -45,7 +45,9 @@
                         <td class="text-center">
                             <form asp-action="Delete" asp-route-id="@airport.Id" method="post" class="d-inline">
                                 <a asp-action="Edit" asp-route-id="@airport.Id" class="btn btn-sm btn-outline-secondary me-1">Edit</a>
-                                <a href="#" class="btn btn-sm btn-danger" onclick="showConfirm('@airport.Id')">Delete</a>
+                                <span id="deletespan_@airport.Id">
+                                    <a href="#" class="btn btn-sm btn-danger" onclick="showConfirm('@airport.Id')">Delete</a>
+                                </span>
 
                                 <!-- Confirm Delete (optional inline toggle if needed) -->
                                 <span id="ConfirmDeleteSpan_@airport.Id" style="display:none">
