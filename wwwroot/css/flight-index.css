@@ -1,0 +1,34 @@
+﻿
+body {
+    background-color: #ffffff;
+}
+
+
+.flight-list-container {
+    background-color: #f2f6fc; 
+    padding: 30px;
+    border-radius: 12px;
+    max-width: 960px;
+    margin: 40px auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+
+.form-title {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 25px;
+    color: #1f2e4d;
+}
+
+.table-header {
+    background-color: #1f2e4d;
+    color: white;
+    font-weight: 600;
+}
+
+.table th, .table td {
+    text-align: center;
+    vertical-align: middle;
+}

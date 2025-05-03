@@ -9,7 +9,11 @@
     <title>@ViewData["Title"] - WebApplication1</title>
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+  
+
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @RenderSection("Styles", required: false)
+
 </head>
 <body>
     <header>
@@ -89,6 +93,7 @@
     <!-- ✅ Bootstrap after jQuery -->
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
 
     <!-- ✅ Allow child views to include additional scripts like _ValidationScriptsPartial -->
     @await RenderSectionAsync("Scripts", required: false)

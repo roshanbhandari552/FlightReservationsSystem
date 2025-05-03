@@ -1,0 +1,45 @@
+﻿.form-container {
+    background-color: #e8f1fa;
+    padding: 30px;
+    border-radius: 12px;
+    max-width: 600px;
+    margin: 40px auto;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.form-title {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 25px;
+    color: #1f2e4d;
+}
+
+.form-label {
+    font-weight: 500;
+    margin-bottom: 5px;
+    display: block;
+    color: #333;
+}
+
+.form-control {
+    border-radius: 8px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    width: 100%;
+}
+
+.form-buttons {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.btn-success {
+    padding: 8px 20px;
+    font-weight: bold;
+}
+
+.btn-secondary {
+    padding: 8px 20px;
+    margin-left: 10px;
+}

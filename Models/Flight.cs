@@ -15,5 +15,10 @@
         public Aircraft Aircraft { get; set; }
 
         public TimeSpan EstimatedDuration { get; set; }
+
+        public DateTime FlightDateTime { get; set; }
+
+
+
     }
 }

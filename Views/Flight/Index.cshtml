@@ -1,0 +1,80 @@
+﻿@model IEnumerable<FlightReservationSystem.Models.Flight>
+@section Styles {
+    <link rel="stylesheet" href="~/css/flight-index.css" />
+}
+
+@{
+    ViewData["Title"] = "Flights";
+}
+
+<div class="flight-list-container mt-6">
+    <h2 class="form-title mb-2">Flight List</h2>
+
+    <div class="text-end mb-2">
+        <a asp-action="Create" class="btn btn-success">
+            + Add New Flight
+        </a>
+    </div>
+
+    <table class="table table-bordered table-hover align-middle shadow-sm">
+        <thead class="table-header text-center">
+            <tr>
+                <th>Flight</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Aircraft</th>
+                <th>Duration</th>
+                <th>FlightDate</th>
+                <th>FlightTime</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var flight in Model)
+            {
+                <tr>
+                    <td>@flight.FlightNumber</td>
+                    <td>@flight.OriginAirport?.Name</td>
+                    <td>@flight.DestinationAirport?.Name</td>
+                    <td>@flight.Aircraft?.Model</td>
+                    
+                    <td>
+                        @($"{flight.EstimatedDuration.Hours}h {flight.EstimatedDuration.Minutes}m {flight.EstimatedDuration.Seconds}s")
+                    </td>
+                    <td>@flight.FlightDateTime.ToString("yyyy-MM-dd")</td>
+                    <td>@flight.FlightDateTime.ToString("HH:mm:ss")</td>  
+
+                    <td class="text-center">
+                        <form asp-action="Delete" asp-route-id="@flight.Id" method="post" class="d-inline">
+                            <a asp-action="Edit" asp-route-id="@flight.Id" class="btn btn-sm btn-outline-secondary me-1">Edit</a>
+
+                            <span id="deletespan_@flight.Id">
+                                <a href="#" class="btn btn-sm btn-danger" onclick="showConfirm('@flight.Id')">Delete</a>
+                            </span>
+
+                            <span id="ConfirmDeleteSpan_@flight.Id" style="display:none">
+                                <span class="text-danger fw-bold me-2">Are you sure?</span>
+                                <button type="submit" class="btn btn-danger btn-sm">Yes</button>
+                                <a href="#" class="btn btn-secondary btn-sm" onclick="hideConfirm('@flight.Id')">No</a>
+                            </span>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        function showConfirm(id) {
+            document.getElementById('ConfirmDeleteSpan_' + id).style.display = 'inline';
+            document.getElementById('deletespan_' + id).style.display = 'none';
+        }
+
+        function hideConfirm(id) {
+            document.getElementById('ConfirmDeleteSpan_' + id).style.display = 'none';
+            document.getElementById('deletespan_' + id).style.display = 'inline';
+        }
+    </script>
+}
