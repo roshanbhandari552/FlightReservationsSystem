@@ -1,0 +1,57 @@
+﻿body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f8f9fa;
+}
+
+.flight-card {
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    background-color: white;
+    padding: 20px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.flight-info {
+    flex: 1;
+}
+
+.flight-title {
+    font-weight: 600;
+    font-size: 1.25rem;
+    color: #1661af;
+}
+
+.flight-details {
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.airline-logo {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+}
+
+.btn-book {
+    background-color: #1661af;
+    color: white;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 5px;
+    text-transform: uppercase;
+}
+
+    .btn-book:hover {
+        background-color: #0d4b91;
+    }
+
+.no-flights {
+    padding: 40px;
+    font-size: 1.2rem;
+    color: #d71921;
+}

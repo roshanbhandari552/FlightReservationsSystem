@@ -1,0 +1,75 @@
+﻿@model List<FlightReservationSystem.Models.Flight>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/AvailableFlight.css" />
+    <style>
+        .flight-logo {
+            width: 100px;
+            max-height: 60px;
+            object-fit: contain;
+        }
+
+        .flight-container {
+            background-color: #f2f6fc; /* Light blue-gray */
+            padding: 2rem;
+        }
+
+        .flight-card {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .btn-book {
+            background-color: #0d6efd;
+            color: white;
+            padding: 0.5rem 1.25rem;
+            border: none;
+            border-radius: 5px;
+            text-transform: uppercase;
+        }
+
+            .btn-book:hover {
+                background-color: #084298;
+            }
+    </style>
+}
+
+@{
+    ViewData["Title"] = "Available Flights";
+}
+
+<div class="flight-container">
+    <h2 class="page-title text-center text-primary mb-4">Available Flights</h2>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-warning text-center">No flights found for the selected criteria.</div>
+    }
+    else
+    {
+        <div class="row gx-4 gy-4 justify-content-center">
+            @foreach (var flight in Model)
+            {
+                <div class="col-md-10">
+                    <div class="flight-card">
+                        <div class="d-flex align-items-center">
+                            <img src="@Url.Content("~/images/placeholder.jpg")" alt="Aircraft Logo" class="flight-logo me-3" />
+                            <div class="flight-info">
+                                <p class="flight-number">Flight #: <strong>@flight.FlightNumber</strong></p>
+                                <p class="flight-detail">From: @flight.OriginAirport?.Name</p>
+                                <p class="flight-detail">To: @flight.DestinationAirport?.Name</p>
+                                <p class="flight-detail">Date: @flight.FlightDateTime.ToString("MMM dd, yyyy")</p>
+                                <p class="aircraft-model">Aircraft: @(flight.Aircraft?.Model ?? "N/A")</p>
+                            </div>
+                        </div>
+                        <div class="flight-footer d-flex justify-content-end mt-3">
+                            <a asp-action="Book" asp-route-id="@flight.Id" class="btn btn-book">Book</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
