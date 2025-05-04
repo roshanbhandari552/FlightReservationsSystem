@@ -1,0 +1,100 @@
+﻿@model FlightReservationSystem.ViewModel.FlightSearchViewModel
+
+@section Styles {
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <!-- Flatpickr -->
+    <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet" />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="~/css/flight-search.css" />
+}
+
+@{
+    ViewData["Title"] = "Search Flights";
+}
+
+<div class="container">
+    <div class="search-header text-center">
+        <h1>Book Your Flight</h1>
+        <p>Experience world-class service and comfort</p>
+    </div>
+
+    <div class="search-container">
+        <div class="search-bg"></div>
+        <div class="search-content">
+            <div class="search-card">
+                <form asp-action="FlightSearch" method="post" class="flight-search-form">
+                    <div class="form-row">
+                        <!-- From -->
+                        <div class="col">
+                            <div class="form-group">
+                                <label asp-for="SelectedOriginAirportId" class="form-label">From</label>
+                                <select asp-for="SelectedOriginAirportId" asp-items="Model.OriginAirports" class="form-control">
+                                    <option value="">Departure Airport</option>
+                                </select>
+                                <span asp-validation-for="SelectedOriginAirportId" class="error-text text-danger"></span>
+                            </div>
+                        </div>
+
+
+                        <!-- Swap Button -->
+                        <div class="col-auto swap-btn-container">
+                            <button type="button" class="swap-btn" title="Swap Airports" aria-label="Swap Airports">
+                                <i class="fas fa-exchange-alt"></i>
+                            </button>
+                        </div>
+
+                        <!-- To -->
+                        <div class="col">
+                            <div class="form-group">
+                                <label asp-for="SelectedDestinationAirportId" class="form-label">To</label>
+                                <select asp-for="SelectedDestinationAirportId" asp-items="Model.DestinationAirports" class="form-control">
+                                    <option value="">Destination Airport </option>
+                                </select>
+                                <span asp-validation-for="SelectedDestinationAirportId" class="error-text text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Date -->
+                        <div class="col">
+                            <div class="form-group">
+                                <label asp-for="DepartureDate" class="form-label">Departure</label>
+                                <input asp-for="DepartureDate" class="form-control flatpickr" placeholder="Choose date" />
+                                <span asp-validation-for="DepartureDate" class="error-text"></span>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="col-auto search-btn-container">
+                            <button type="submit" class="search-btn">
+                                <i class="fas fa-search me-2"></i> Find Flights
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Flatpickr -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        flatpickr(".flatpickr", {
+            dateFormat: "Y-m-d",
+            minDate: "today",
+            defaultDate: null
+        });
+        document.querySelector(".flatpickr").value = "";
+
+
+        document.querySelector('.swap-btn').addEventListener('click', function () {
+            const fromInput = document.querySelector('[name="DepartureAirport"]');
+            const toInput = document.querySelector('[name="ArrivalAirport"]');
+            const temp = fromInput.value;
+            fromInput.value = toInput.value;
+            toInput.value = temp;
+        });
+    </script>
+}

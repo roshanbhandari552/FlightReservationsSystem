@@ -3,6 +3,7 @@ using FlightReservationSystem.ViewModel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using WebApplication1.Models;
 
 namespace FlightReservationSystem.Controllers
@@ -38,6 +39,20 @@ namespace FlightReservationSystem.Controllers
                 Disabled = false,
                 Selected = true
             });
+        }
+
+        private void FlightLoadDropdowns(FlightSearchViewModel model)
+        {
+            var airport = _context.Airports
+          .Select(a => new SelectListItem
+          {
+              Value = a.Id.ToString(),
+              Text = $"{a.Name} ({a.Code}) - {a.Country}"
+          })
+          .ToList();
+
+            model.DestinationAirports = airport;
+            model.OriginAirports = new List<SelectListItem>(airport);
         }
 
         public IActionResult Index()
@@ -180,6 +195,51 @@ namespace FlightReservationSystem.Controllers
                 return View("Error", new ErrorViewModel { Message = "An error occurred while deleting the flight." });
             }
         }
+
+        [HttpGet]
+        public IActionResult FlightSearch()
+        {
+            var model = new FlightSearchViewModel();
+            FlightLoadDropdowns(model);
+            return View(model);
+        }
+
+        [HttpPost]
+        public IActionResult FLightSearch(FlightSearchViewModel model)
+        {
+            
+            if (!ModelState.IsValid)
+            {
+                FlightLoadDropdowns(model);
+                return View(model);
+            }
+
+            var originId = Guid.Parse(model.SelectedOriginAirportId);
+            var destinationId = Guid.Parse(model.SelectedDestinationAirportId);
+
+            model.MatchingFlights = _context.Flights
+            .Include(f => f.OriginAirport)
+            .Include(f => f.DestinationAirport)
+            .Include(f => f.Aircraft)
+            .Where(f =>
+                f.OriginAirportId == originId &&
+                f.DestinationAirportId ==destinationId&&
+                f.FlightDateTime.Date == model.DepartureDate.Date
+            ).ToList();
+            TempData["Flights"] = JsonConvert.SerializeObject(model.MatchingFlights);
+            return RedirectToAction("AvailableFlight");
+        }
+
+        [HttpGet]
+        public IActionResult AvailableFlight()
+        {
+            if (TempData["Flights"] is not string flightData)
+                return RedirectToAction("Search");
+
+            var flights = JsonConvert.DeserializeObject<List<Flight>>(flightData);
+            return View(flights);
+        }
+
 
     }
 }
