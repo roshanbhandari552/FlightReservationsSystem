@@ -68,6 +68,10 @@ body {
         outline-offset: 2px;
         box-shadow: none;
     }
+.search-btn {
+    min-width: 200px;
+}
+
 
 /* ==========================================================================
    Search Container Styles - Simplified design
@@ -207,10 +211,11 @@ body {
 
 .form-row {
     display: flex;
-    flex-wrap: nowrap;
+    flex-wrap: wrap; /* ✅ changed from nowrap */
     gap: 0.625rem;
     align-items: stretch;
 }
+
 
     .form-row .col {
         flex: 1;
