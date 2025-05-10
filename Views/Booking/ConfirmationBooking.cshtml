@@ -1,0 +1,43 @@
+﻿@model FlightReservationSystem.Models.Booking
+
+@{
+    ViewData["Title"] = "Booking Confirmation";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-success">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Booking Confirmed!</h4>
+                </div>
+
+                <div class="card-body">
+                    <p><strong>Booking ID:</strong> @Model.Id</p>
+                    <p><strong>Flight:</strong> @Model.Flight.FlightNumber</p>
+                    <p><strong>Departure Airport:</strong> @Model.Flight.OriginAirport.Name</p>
+                    <p><strong>Arrival Airport:</strong> @Model.Flight.DestinationAirport.Name</p>
+                    <p><strong>Email:</strong> @Model.Email</p>
+                    <p><strong>Payment Method:</strong> @Model.PaymentMethod</p>
+                    <p><strong>Booking Date:</strong> @Model.BookingDate.ToShortDateString()</p>
+
+                    <hr />
+
+                    <h5>Passengers:</h5>
+                    <ul class="list-group list-group-flush">
+                        @foreach (var p in Model.Passengers)
+                        {
+                            <li class="list-group-item">
+                                <strong>@p.FullName</strong> — @p.Gender,
+                                DOB: @p.DateOfBirth.ToShortDateString(),
+                                Passport: @p.PassportNumber
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+

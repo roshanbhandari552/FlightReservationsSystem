@@ -73,7 +73,7 @@
                             </div>
                         </div>
                         <div class="flight-footer d-flex justify-content-end mt-3">
-                            <a asp-action="Book" asp-route-id="@flight.Id" class="btn btn-book">Book</a>
+                            <a asp-controller="Booking" asp-action="CreateBooking" asp-route-flightId="@flight.Id" class="btn btn-book">Book</a>
                         </div>
                     </div>
                 </div>
@@ -107,7 +107,7 @@
                                 </div>
                             </div>
                             <div class="flight-footer d-flex justify-content-end mt-3">
-                                <a asp-action="Book" asp-route-id="@flight.Id" class="btn btn-book">Book</a>
+                                <a asp-controller="Booking" asp-action="CreateBooking" asp-route-flightId="@flight.Id" class="btn btn-book">Book</a>
                             </div>
                         </div>
                     </div>
