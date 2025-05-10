@@ -9,9 +9,6 @@ namespace FlightReservationSystem.Models
         public string FullName { get; set; }
         public string Gender { get; set; }
         public DateTime DateOfBirth { get; set; }
-
-        [Required]
-        [StringLength(20)]
         public string PassportNumber { get; set; }
 
         public Guid BookingId { get; set; }

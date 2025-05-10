@@ -1,4 +1,4 @@
-﻿@model List<FlightReservationSystem.Models.Flight>
+﻿@model FlightReservationSystem.ViewModel.FlightSearchResultViewModel
 
 @section Styles {
     <link rel="stylesheet" href="~/css/AvailableFlight.css" />
@@ -10,7 +10,7 @@
         }
 
         .flight-container {
-            background-color: #f2f6fc; /* Light blue-gray */
+            background-color: #f2f6fc;
             padding: 2rem;
         }
 
@@ -33,6 +33,12 @@
             .btn-book:hover {
                 background-color: #084298;
             }
+
+        .section-header {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
     </style>
 }
 
@@ -43,14 +49,16 @@
 <div class="flight-container">
     <h2 class="page-title text-center text-primary mb-4">Available Flights</h2>
 
-    @if (!Model.Any())
+    <!-- Outbound Flights -->
+    <div class="section-header text-primary">Outbound Flights</div>
+    @if (!Model.OutboundFlights.Any())
     {
-        <div class="alert alert-warning text-center">No flights found for the selected criteria.</div>
+        <div class="alert alert-warning text-center">No outbound flights found for the selected criteria.</div>
     }
     else
     {
         <div class="row gx-4 gy-4 justify-content-center">
-            @foreach (var flight in Model)
+            @foreach (var flight in Model.OutboundFlights)
             {
                 <div class="col-md-10">
                     <div class="flight-card">
@@ -65,11 +73,46 @@
                             </div>
                         </div>
                         <div class="flight-footer d-flex justify-content-end mt-3">
-                            <a asp-action="Book" asp-route-id="@flight.Id" class="btn btn-book">Book</a>
+                            <a asp-controller="Booking" asp-action="CreateBooking" asp-route-flightId="@flight.Id" class="btn btn-book">Book</a>
                         </div>
                     </div>
                 </div>
             }
         </div>
+    }
+
+    <!-- Return Flights (Only if round trip) -->
+    @if (Model.IsRoundTrip)
+    {
+        <div class="section-header text-primary mt-5">Return Flights</div>
+        @if (!Model.ReturnFlights.Any())
+        {
+            <div class="alert alert-warning text-center">No return flights found for the selected return date.</div>
+        }
+        else
+        {
+            <div class="row gx-4 gy-4 justify-content-center">
+                @foreach (var flight in Model.ReturnFlights)
+                {
+                    <div class="col-md-10">
+                        <div class="flight-card">
+                            <div class="d-flex align-items-center">
+                                <img src="@Url.Content("~/images/placeholder.jpg")" alt="Aircraft Logo" class="flight-logo me-3" />
+                                <div class="flight-info">
+                                    <p class="flight-number">Flight #: <strong>@flight.FlightNumber</strong></p>
+                                    <p class="flight-detail">From: @flight.OriginAirport?.Name</p>
+                                    <p class="flight-detail">To: @flight.DestinationAirport?.Name</p>
+                                    <p class="flight-detail">Date: @flight.FlightDateTime.ToString("MMM dd, yyyy")</p>
+                                    <p class="aircraft-model">Aircraft: @(flight.Aircraft?.Model ?? "N/A")</p>
+                                </div>
+                            </div>
+                            <div class="flight-footer d-flex justify-content-end mt-3">
+                                <a asp-controller="Booking" asp-action="CreateBooking" asp-route-flightId="@flight.Id" class="btn btn-book">Book</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
     }
 </div>

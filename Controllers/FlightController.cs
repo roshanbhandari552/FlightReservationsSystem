@@ -207,13 +207,25 @@ namespace FlightReservationSystem.Controllers
         [HttpPost]
         public IActionResult FLightSearch(FlightSearchViewModel model)
         {
-            
+
+            if (model.IsRoundTrip && !model.ReturnDate.HasValue)
+            {
+                ModelState.AddModelError("ReturnDate", "Return date is required for round trip.");
+            }
+
+          
             if (!ModelState.IsValid)
             {
                 FlightLoadDropdowns(model);
                 return View(model);
             }
+            if (!model.IsRoundTrip)
+            {
+                // Clear ReturnDate errors if it is not selected
+                ModelState.Remove(nameof(model.ReturnDate));
+            }
 
+           
             var originId = Guid.Parse(model.SelectedOriginAirportId);
             var destinationId = Guid.Parse(model.SelectedDestinationAirportId);
 
@@ -226,18 +238,50 @@ namespace FlightReservationSystem.Controllers
                 f.DestinationAirportId ==destinationId&&
                 f.FlightDateTime.Date == model.DepartureDate.Date
             ).ToList();
+
+            Console.WriteLine("IsRoundTrip: " + model.IsRoundTrip);
+            // If round trip and return date is selected, get return flights
+            if (model.IsRoundTrip && model.ReturnDate.HasValue)
+            {
+                model.ReturnFlights = _context.Flights
+                    .Include(f => f.OriginAirport)
+                    .Include(f => f.DestinationAirport)
+                    .Include(f => f.Aircraft)
+                    .Where(f =>
+                        f.OriginAirportId == destinationId &&
+                        f.DestinationAirportId == originId &&
+                        f.FlightDateTime.Date == model.ReturnDate.Value.Date)
+                    .ToList();
+            }
             TempData["Flights"] = JsonConvert.SerializeObject(model.MatchingFlights);
+            TempData["IsRoundTrip"] = model.IsRoundTrip.ToString();
+            TempData["ReturnFlights"] = JsonConvert.SerializeObject(model.ReturnFlights);
             return RedirectToAction("AvailableFlight");
         }
 
         [HttpGet]
         public IActionResult AvailableFlight()
         {
-            if (TempData["Flights"] is not string flightData)
-                return RedirectToAction("Search");
+            if (TempData["Flights"] is not string outboundData)
+                return RedirectToAction("FlightSearch");
 
-            var flights = JsonConvert.DeserializeObject<List<Flight>>(flightData);
-            return View(flights);
+            var outboundFlights = JsonConvert.DeserializeObject<List<Flight>>(outboundData);
+            var returnFlights = TempData["ReturnFlights"] is string returnData
+                ? JsonConvert.DeserializeObject<List<Flight>>(returnData)
+                : new List<Flight>();
+
+            bool isRoundTrip = TempData["IsRoundTrip"] is string roundTripFlag && bool.TryParse(roundTripFlag, out bool result) && result;
+
+            var model = new FlightSearchResultViewModel
+            {
+                OutboundFlights = outboundFlights,
+                ReturnFlights = returnFlights,
+                IsRoundTrip = isRoundTrip
+            };
+            Console.WriteLine($"Return flights: {model.ReturnFlights.Count}");
+
+
+            return View(model);
         }
 
 

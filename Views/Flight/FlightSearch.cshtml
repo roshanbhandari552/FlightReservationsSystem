@@ -23,54 +23,79 @@
         <div class="search-bg"></div>
         <div class="search-content">
             <div class="search-card">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
                 <form asp-action="FlightSearch" method="post" class="flight-search-form">
-                    <div class="form-row">
-                        <!-- From -->
-                        <div class="col">
-                            <div class="form-group">
-                                <label asp-for="SelectedOriginAirportId" class="form-label">From</label>
-                                <select asp-for="SelectedOriginAirportId" asp-items="Model.OriginAirports" class="form-control">
-                                    <option value="">Departure Airport</option>
-                                </select>
-                                <span asp-validation-for="SelectedOriginAirportId" class="error-text text-danger"></span>
-                            </div>
-                        </div>
-
-
-                        <!-- Swap Button -->
-                        <div class="col-auto swap-btn-container">
-                            <button type="button" class="swap-btn" title="Swap Airports" aria-label="Swap Airports">
-                                <i class="fas fa-exchange-alt"></i>
-                            </button>
-                        </div>
-
-                        <!-- To -->
-                        <div class="col">
-                            <div class="form-group">
-                                <label asp-for="SelectedDestinationAirportId" class="form-label">To</label>
-                                <select asp-for="SelectedDestinationAirportId" asp-items="Model.DestinationAirports" class="form-control">
-                                    <option value="">Destination Airport </option>
-                                </select>
-                                <span asp-validation-for="SelectedDestinationAirportId" class="error-text text-danger"></span>
-                            </div>
-                        </div>
-
-                        <!-- Date -->
-                        <div class="col">
-                            <div class="form-group">
-                                <label asp-for="DepartureDate" class="form-label">Departure</label>
-                                <input asp-for="DepartureDate" class="form-control flatpickr" placeholder="Choose date" />
-                                <span asp-validation-for="DepartureDate" class="error-text"></span>
-                            </div>
-                        </div>
-
-                        <!-- Submit Button -->
-                        <div class="col-auto search-btn-container">
-                            <button type="submit" class="search-btn">
-                                <i class="fas fa-search me-2"></i> Find Flights
-                            </button>
+                   
+                    <div class="d-flex justify-content-end mb-3">
+                        <div class="trip-type-buttons">
+                            <button type="button" class="btn btn-primary btn-sm me-2" id="oneWayBtn">One Way</button>
+                            <button type="button" class="btn btn-primary btn-sm me-2" id="twoWayBtn">Two Way</button>
                         </div>
                     </div>
+
+                    <input type="hidden" id="isRoundTrip" name="IsRoundTrip" value="false" autocomplete="off" />
+
+
+                    <div class="form-fields-container">
+                        <div class="form-row align-items-end flex-wrap">
+                            <!-- From -->
+                            <div class="col">
+                                <div class="form-group">
+                                    <label asp-for="SelectedOriginAirportId" class="form-label">From</label>
+                                    <select asp-for="SelectedOriginAirportId" asp-items="Model.OriginAirports" class="form-control">
+                                        <option value="">Departure Airport</option>
+                                    </select>
+                                    <span asp-validation-for="SelectedOriginAirportId" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <!-- Swap Button -->
+                            <div class="col-auto swap-btn-container">
+                                <button type="button" class="swap-btn" title="Swap Airports" aria-label="Swap Airports">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </button>
+                            </div>
+
+                            <!-- To -->
+                            <div class="col">
+                                <div class="form-group">
+                                    <label asp-for="SelectedDestinationAirportId" class="form-label">To</label>
+                                    <select asp-for="SelectedDestinationAirportId" asp-items="Model.DestinationAirports" class="form-control">
+                                        <option value="">Destination Airport</option>
+                                    </select>
+                                    <span asp-validation-for="SelectedDestinationAirportId" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <!-- Departure Date -->
+                            <div class="col">
+                                <div class="form-group">
+                                    <label asp-for="DepartureDate" class="form-label">Departure</label>
+                                    <input asp-for="DepartureDate" class="form-control flatpickr" placeholder="Choose departure date" />
+                                    <span asp-validation-for="DepartureDate" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <!-- Return Date (hidden by default) -->
+                            <div class="col return-date-field d-none">
+                                <div class="form-group">
+                                    <label asp-for="ReturnDate" class="form-label">Return</label>
+                                    <input asp-for="ReturnDate" class="form-control flatpickr" placeholder="Choose return date" />
+                                    <span asp-validation-for="ReturnDate" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Search Button row -->
+                        <div class="row mt-3">
+                            <div class="col d-flex justify-content-center">
+                                <button type="submit" class="search-btn">
+                                    <i class="fas fa-search me-2"></i> Find Flights
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                 </form>
             </div>
         </div>
@@ -78,23 +103,60 @@
 </div>
 
 @section Scripts {
-    <!-- Flatpickr -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
+        // Initialize Flatpickr for both date fields
         flatpickr(".flatpickr", {
             dateFormat: "Y-m-d",
             minDate: "today",
             defaultDate: null
         });
-        document.querySelector(".flatpickr").value = "";
 
+        // Clear initial values
+        document.querySelectorAll(".flatpickr").forEach(fp => fp.value = "");
 
+        // Swap airport values
         document.querySelector('.swap-btn').addEventListener('click', function () {
-            const fromInput = document.querySelector('[name="DepartureAirport"]');
-            const toInput = document.querySelector('[name="ArrivalAirport"]');
+            const fromInput = document.querySelector('[name="SelectedOriginAirportId"]');
+            const toInput = document.querySelector('[name="SelectedDestinationAirportId"]');
             const temp = fromInput.value;
             fromInput.value = toInput.value;
             toInput.value = temp;
+        });
+
+        // Handle One Way / Two Way buttons
+        const oneWayBtn = document.getElementById('oneWayBtn');
+        const twoWayBtn = document.getElementById('twoWayBtn');
+        const returnField = document.querySelector('.return-date-field');
+        const isRoundTripInput = document.getElementById('isRoundTrip');
+
+        oneWayBtn.addEventListener('click', () => {
+            returnField.classList.add('d-none');
+            isRoundTripInput.value = "false";
+
+            // Styling toggle
+            oneWayBtn.classList.add('btn-primary');
+            oneWayBtn.classList.remove('btn-outline-primary');
+
+            twoWayBtn.classList.remove('btn-primary');
+            twoWayBtn.classList.add('btn-outline-primary');
+        });
+
+        twoWayBtn.addEventListener('click', () => {
+            returnField.classList.remove('d-none');
+            isRoundTripInput.value = "true";
+
+            // Styling toggle
+            twoWayBtn.classList.add('btn-primary');
+            twoWayBtn.classList.remove('btn-outline-primary');
+
+            oneWayBtn.classList.remove('btn-primary');
+            oneWayBtn.classList.add('btn-outline-primary');
+        });
+
+        // Debug (optional): confirm hidden input value before form submission
+        document.querySelector('.search-btn').addEventListener('click', function () {
+            console.log("IsRoundTrip value submitted:", isRoundTripInput.value);
         });
     </script>
 }

@@ -1,0 +1,134 @@
+﻿@model FlightReservationSystem.ViewModel.BookingViewModel
+
+@{
+    ViewData["Title"] = "Book Flight";
+}
+
+<h2>Book Flight</h2>
+<style>
+    .passenger-entry {
+        position: relative;
+    }
+
+        .passenger-entry .btn-danger {
+            position: absolute;
+            top: 0;
+            right: 0;
+            margin: 8px;
+        }
+
+</style>
+
+<form asp-action="CreateBooking" method="post">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <input type="hidden" asp-for="FlightId" />
+    <input type="hidden" asp-for="UserId" />
+
+    <!-- Contact Email -->
+    <div class="form-group mb-3">
+
+        <label asp-for="Email"></label>
+        <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <!-- Payment Method -->
+    <div class="form-group mb-3">
+        <label asp-for="PaymentMethod">Select Payment Method</label>
+        <select asp-for="PaymentMethod" class="form-control">
+            <option value="">-- Choose --</option>
+            <option>Pay at Airport</option>
+            <option>Mobile Pay</option>
+            <option>PayPal</option>
+        </select>
+        <span asp-validation-for="PaymentMethod" class="text-danger"></span>
+    </div>
+
+    <!-- Passengers -->
+    <div id="passenger-section">
+        @for (int i = 0; i < Model.Passengers.Count; i++)
+        {
+            <div class="border p-3 mb-3">
+                <h5>Passenger @(i + 1)</h5>
+
+                <div class="form-group mb-2">
+                    <label asp-for="Passengers[i].FullName">Full Name</label>
+                    <input asp-for="Passengers[i].FullName" class="form-control" />
+                    <span asp-validation-for="Passengers[i].FullName" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-2">
+                    <label asp-for="Passengers[i].Gender">Gender</label>
+                    <input asp-for="Passengers[i].Gender" class="form-control" />
+                    <span asp-validation-for="Passengers[i].Gender" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-2">
+                    <label asp-for="Passengers[i].DateOfBirth">Date of Birth</label>
+                    <input asp-for="Passengers[i].DateOfBirth" class="form-control" type="date" />
+                    <span asp-validation-for="Passengers[i].DateOfBirth" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-2">
+                    <label asp-for="Passengers[i].PassportNumber">Passport Number</label>
+                    <input asp-for="Passengers[i].PassportNumber" class="form-control" />
+                    <span asp-validation-for="Passengers[i].PassportNumber" class="text-danger"></span>
+                </div>
+            </div>
+        }
+    </div>
+
+    <button type="button" class="btn btn-outline-primary mb-3" onclick="addPassenger()">+ Add Another Passenger</button>
+
+    <button type="submit" class="btn btn-success">Confirm Booking</button>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        let passengerIndex = @Model.Passengers.Count;
+
+        function addPassenger() {
+            const section = document.getElementById("passenger-section");
+
+            const container = document.createElement("div");
+            container.className = "border p-3 mb-3 position-relative passenger-entry";
+            container.setAttribute("data-index", passengerIndex);
+
+            container.innerHTML = `
+                    <h5>Passenger ${passengerIndex + 1}</h5>
+
+                    <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0" onclick="removePassenger(this)">−</button>
+
+                    <div class="form-group mb-2">
+                        <label>Full Name</label>
+                        <input name="Passengers[${passengerIndex}].FullName" class="form-control" required />
+                    </div>
+
+                    <div class="form-group mb-2">
+                        <label>Gender</label>
+                        <input name="Passengers[${passengerIndex}].Gender" class="form-control" required />
+                    </div>
+
+                    <div class="form-group mb-2">
+                        <label>Date of Birth</label>
+                        <input type="date" name="Passengers[${passengerIndex}].DateOfBirth" class="form-control" required />
+                    </div>
+
+                    <div class="form-group mb-2">
+                        <label>Passport Number</label>
+                        <input name="Passengers[${passengerIndex}].PassportNumber" class="form-control" required maxlength="20" />
+                    </div>
+                `;
+
+            section.appendChild(container);
+            passengerIndex++;
+        }
+
+        function removePassenger(button) {
+            const container = button.closest(".passenger-entry");
+            container.remove();
+        }
+    </script>
+
+}
