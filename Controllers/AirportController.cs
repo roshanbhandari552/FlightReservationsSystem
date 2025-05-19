@@ -1,5 +1,7 @@
 ﻿using FlightReservationSystem.Helper;
 using FlightReservationSystem.Models;
+using FlightReservationSystem.Repositories.AircraftRepo;
+using FlightReservationSystem.Services.AirportServ;
 using FlightReservationSystem.ViewModel;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -10,11 +12,11 @@ namespace FlightReservationSystem.Controllers
 {
     public class AirportController : Controller
     {
-        private readonly AppDbContext _context;
+        private readonly IAirportService airportService;
 
-        public AirportController(AppDbContext context)
+        public AirportController(IAirportService _airportService)
         {
-            _context = context;
+           airportService = _airportService;
         }
 
         private List<string> GetCountryList()
@@ -35,9 +37,9 @@ namespace FlightReservationSystem.Controllers
         }
 
         [HttpGet]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var airport = _context.Airports;
+            var airport = await airportService.GetAllAsync();
 
             return View(airport);
         }
@@ -57,20 +59,10 @@ namespace FlightReservationSystem.Controllers
         {
             if (ModelState.IsValid)
             {
-                var airport = new Airport
-                {
-                    Id = Guid.NewGuid(),
-                    Name = TextCapitalize.CapitalizeEachWord(model.Name),
-                    City = TextCapitalize.CapitalizeEachWord(model.City),
-                    Country = TextCapitalize.CapitalizeEachWord(model.Country),
-                    Code = TextCapitalize.CapitalizeEachWord(model.Code)
-                };
 
                 try
                 {
-                    _context.Airports.Add(airport);
-                    await _context.SaveChangesAsync();
-
+                    airportService.AddAsync(model);
                    
                     TempData["SuccessMessage"] = "Airport created successfully!";
                     return RedirectToAction("Index");
@@ -92,7 +84,7 @@ namespace FlightReservationSystem.Controllers
         public async Task<IActionResult> Edit(Guid Id)
         {
 
-            var airport = await _context.Airports.FindAsync(Id);
+            var airport = await airportService.GetByIdAsync(Id);
             if (airport == null)
             {
                 return NotFound();
@@ -114,28 +106,20 @@ namespace FlightReservationSystem.Controllers
         public async Task<IActionResult> Edit(AirportViewModel model)
         {
 
-
             if (!ModelState.IsValid)
             {
                 ViewBag.Countries = GetCountryList(); // repopulate dropdown if needed
                 return View(model);
             }
 
-            var airport = await _context.Airports.FindAsync(model.Id);
-            if (airport == null)
-            {
-                return NotFound();
-            }
-
             try
             {
-                // Update the properties
-                airport.Code = model.Code;
-                airport.Name = model.Name;
-                airport.City = model.City;
-                airport.Country = model.Country;
-                _context.Airports.Update(airport);
-                await _context.SaveChangesAsync();
+               
+                var success = await airportService.UpdateAsync(model);
+                if(!success)
+                {
+                    return NotFound("Airport isn't found");
+                }
 
                 TempData["SuccessMessage"] = "Airport updated successfully!";
                 return RedirectToAction("Index");
@@ -147,25 +131,15 @@ namespace FlightReservationSystem.Controllers
                 ViewBag.Countries = GetCountryList(); // Repopulate dropdown
                 return View(model);
             }
-
-            return View(airport);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var airport = await _context.Airports.FindAsync(id);
-
-            if (airport == null)
-            {
-                return NotFound();
-            }
-
             try
             {
-                _context.Airports.Remove(airport);
-                await _context.SaveChangesAsync();
+                await airportService.DeleteAsync(id);
 
                 TempData["SuccessMessage"] = "Airport deleted successfully!";
                 return RedirectToAction("Index");
