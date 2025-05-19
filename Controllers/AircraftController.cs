@@ -1,5 +1,6 @@
 ﻿using FlightReservationSystem.Helper;
 using FlightReservationSystem.Models;
+using FlightReservationSystem.Services.AircraftServ;
 using FlightReservationSystem.ViewModel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,16 +11,31 @@ namespace FlightReservationSystem.Controllers
     public class AircraftController : Controller
     {
 
-        private readonly AppDbContext _context;
+        /*private readonly AppDbContext _context;*/
 
-        public AircraftController(AppDbContext context)
+        /* public AircraftController(AppDbContext context)
+         {
+             _context = context;
+         }*/
+
+        private readonly IAircraftServices  _aircraftServices;
+        public AircraftController(IAircraftServices aircraftServices)
         {
-            _context = context;
+            _aircraftServices = aircraftServices;
         }
+
+        /*  [HttpGet]
+          public IActionResult Index()
+          {
+              var aircraft = _context.Aircrafts.ToList(); ;
+
+              return View(aircraft);
+          }*/
+
         [HttpGet]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var aircraft = _context.Aircrafts.ToList(); ;
+            var aircraft = await _aircraftServices.GetAllAsync();
 
             return View(aircraft);
         }
@@ -36,20 +52,14 @@ namespace FlightReservationSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(AircraftViewModel mode)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                var aircraft = new Aircraft
-                {
-                    Id = Guid.NewGuid(),
-                    Model = TextCapitalize.CapitalizeEachWord(mode.Model),
-                    Capacity = mode.Capacity,
-                    Manufacturer = TextCapitalize.CapitalizeEachWord(mode.Manufacturer),
-                };
+                return View(mode);
+            }
 
                 try
-                {
-                    _context.Aircrafts.Add(aircraft);
-                    await _context.SaveChangesAsync();
+                { 
+                   await _aircraftServices.AddAsync(mode);
 
                     TempData["SuccessMessage"] = "Aircraft created successfully!";
                     return RedirectToAction("Index", "Aircraft");
@@ -60,16 +70,13 @@ namespace FlightReservationSystem.Controllers
                     ModelState.AddModelError("", "An error occurred while saving the airport.");
                     return View(mode);
                 }
-            }
-
-            return View(mode);
+            
         }
 
         [HttpGet]
         public async Task<IActionResult> Edit(Guid Id)
         {
-
-            var aircraft = await _context.Aircrafts.FindAsync(Id);
+            var aircraft = await _aircraftServices.GetByIdAsync(Id);
             if (aircraft == null)
             {
                 return NotFound();
@@ -95,40 +102,31 @@ namespace FlightReservationSystem.Controllers
                 return View(mode);
             }
 
-            var aircraft = await _context.Aircrafts.FindAsync(mode.Id);
-            if (aircraft == null)
-            {
-                return NotFound();
-            }
-
-            try
-            {
-                // Update the properties
-                aircraft.Model = mode.Model;
-                aircraft.Capacity = mode.Capacity;
-                aircraft.Manufacturer = mode.Manufacturer;
-                
-                _context.Aircrafts.Update(aircraft);
-                await _context.SaveChangesAsync();
+            try 
+            { 
+            var success = await _aircraftServices.UpdateAsync(mode);
+      
+                if (!success)
+                {
+                    return NotFound();
+                }
 
                 TempData["SuccessMessage"] = "Aircraft updated successfully!";
                 return RedirectToAction("Index");
-
             }
             catch (Exception ex)
             {
                 ModelState.AddModelError("", "An error occurred while updating the aircraft.");
                 return View(mode);
             }
-
-            return View(aircraft);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var aircraft = await _context.Aircrafts.FindAsync(id);
+           /* var aircraft = await _context.Aircrafts.FindAsync(id);*/
+            var aircraft = await _aircraftServices.GetByIdAsync(id);
 
             if (aircraft == null)
             {
@@ -137,8 +135,9 @@ namespace FlightReservationSystem.Controllers
 
             try
             {
-                _context.Aircrafts.Remove(aircraft);
-                await _context.SaveChangesAsync();
+              /*  _context.Aircrafts.Remove(aircraft);
+                await _context.SaveChangesAsync();*/
+             await  _aircraftServices.DeleteAsync(id);
 
                 TempData["SuccessMessage"] = "Aircraft deleted successfully!";
                 return RedirectToAction("Index");

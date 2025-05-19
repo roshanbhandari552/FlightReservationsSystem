@@ -1,0 +1,99 @@
+﻿using FlightReservationSystem.Models;
+using FlightReservationSystem.Repositories.FlightRepo;
+using FlightReservationSystem.ViewModel;
+using Microsoft.EntityFrameworkCore;
+
+namespace FlightReservationSystem.Services.FlightServ
+{
+    public class FlightService : IflightService
+    {
+        private readonly IFlightRepository _flightRepository;
+        public FlightService(IFlightRepository flightRepository) {
+            _flightRepository = flightRepository;
+        }  
+        public async Task<bool> AddAsync(FlightViewModel model)
+        {
+            if(model == null)
+            {
+                return false;
+            }
+
+            if (await _flightRepository.FlightExistsAsync(model.FlightNumber))
+            {
+                return false; // Indicate duplicate
+            }
+
+            var flight = new Flight
+            {
+                Id = Guid.NewGuid(),
+                FlightNumber = model.FlightNumber,
+                OriginAirportId = model.OriginAirportId,
+                DestinationAirportId = model.DestinationAirportId,
+                AircraftId = model.AircraftId,
+                EstimatedDuration = model.EstimatedDuration,
+                FlightDateTime = model.FlightDateTime
+            };
+
+           await _flightRepository.AddAsync(flight);
+            return true;
+        }
+
+        public async Task<bool> DeleteAsync(Guid id)
+        {
+           if(id == Guid.Empty)
+            {
+                return false;
+            }
+
+           var flight = await _flightRepository.GetByIdAsync(id);
+            if(flight == null)
+            {
+                return false;
+            }
+            await _flightRepository.DeleteAsync(flight);
+            return true;
+        }
+
+        public async Task<List<Flight>> GetAllAsync()
+        {
+           return await _flightRepository.GetAllAsync();
+        }
+
+        public async Task<List<Flight>> GetAllWithDetailsAsync()
+        {
+            return await _flightRepository.GetAllWithDetailsAsync();
+        }
+
+
+        public async Task<Flight> GetByIdAsync(Guid id)
+        {
+            if(id == Guid.Empty)
+            {
+                throw new ArgumentException("Invalid flight ID.", nameof(id));
+            }
+
+            return await _flightRepository.GetByIdAsync(id);
+        }
+
+        public async Task<bool> UpdateAsync(FlightViewModel model)
+        {
+           if(model == null)
+            {
+                return false;
+            }
+           var flight = await _flightRepository.GetByIdAsync(model.Id);
+
+            flight.FlightNumber = model.FlightNumber;
+            flight.OriginAirportId = model.OriginAirportId;
+            flight.DestinationAirportId = model.DestinationAirportId;
+            flight.AircraftId = model.AircraftId;
+            flight.EstimatedDuration = model.EstimatedDuration;
+            flight.FlightDateTime = model.FlightDateTime;
+
+           await _flightRepository.UpdateAsync(flight);
+            return true;
+        }
+        
+        
+    }
+}
