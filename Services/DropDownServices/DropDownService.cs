@@ -50,7 +50,7 @@ namespace FlightReservationSystem.Services.DropDownServices
              return items;*/
         }
 
-        public async void GetAllAirportDropDownAsync(FlightSearchViewModel model)
+        public async Task GetAllAirportDropDownAsync(FlightSearchViewModel model)
         {
             var airport = await _airportRepository.GetAll();
             var airport1 = airport.Select(a => new SelectListItem
@@ -63,8 +63,6 @@ namespace FlightReservationSystem.Services.DropDownServices
             model.DestinationAirports = airport1;
             model.OriginAirports = new List<SelectListItem>(airport1);
         }
-
-        
 
 
     }

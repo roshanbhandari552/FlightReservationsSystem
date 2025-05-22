@@ -1,8 +1,11 @@
 using FlightReservationSystem.Models;
 using FlightReservationSystem.Repositories.AircraftRepo;
 using FlightReservationSystem.Repositories.AirportRwpo;
+using FlightReservationSystem.Repositories.FlightRepo;
 using FlightReservationSystem.Services.AircraftServ;
 using FlightReservationSystem.Services.AirportServ;
+using FlightReservationSystem.Services.DropDownServices;
+using FlightReservationSystem.Services.FlightServ;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Models;
@@ -22,6 +25,11 @@ builder.Services.AddScoped<IAircraftServices, AircraftServices>();
 
 builder.Services.AddScoped<IAirportRepository, AirportRepository>();
 builder.Services.AddScoped<IAirportService, AirportService>();
+
+builder.Services.AddScoped<IDropDownService, DropDownService>();
+
+builder.Services.AddScoped<IFlightRepository, FlightRepository>();
+builder.Services.AddScoped<IFlightService, FlightService>();
 
 
 
@@ -47,8 +55,8 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/Account/AccessDenied"; // optional
 });
 
-var app = builder.Build();
 
+var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

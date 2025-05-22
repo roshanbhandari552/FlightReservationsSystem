@@ -1,4 +1,6 @@
 ﻿using FlightReservationSystem.Models;
+using FlightReservationSystem.Services.DropDownServices;
+using FlightReservationSystem.Services.FlightServ;
 using FlightReservationSystem.ViewModel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -10,69 +12,39 @@ namespace FlightReservationSystem.Controllers
 {
     public class FlightController : Controller
     {
-        private readonly AppDbContext _context;
+        private readonly IFlightService _flightService;
+        private readonly IDropDownService _dropDownService;
 
-        public FlightController(AppDbContext context)
+        public FlightController(IFlightService flightService, IDropDownService dropDownService)
         {
-            _context = context;
+            _flightService = flightService;
+            _dropDownService = dropDownService;
         }
 
-        private void LoadDropdowns(FlightViewModel model)
+        private async Task LoadDropdowns(FlightViewModel model)
         {
-            model.Airports = _context.Airports
-                .Select(a => new SelectListItem
-                {
-                    Value = a.Id.ToString(),
-                    Text = $"{a.Name} ({a.Code}) - {a.Country}"
-                })
-                .ToList();
-
-
-            model.Aircrafts = _context.Aircrafts
-                .Select(a => new SelectListItem { Value = a.Id.ToString(), Text = a.Model })
-                .ToList();
-
-            model.Aircrafts.Insert(0, new SelectListItem
-            {
-                Value = "",
-                Text = "Select Aircraft",
-                Disabled = false,
-                Selected = true
-            });
+           model.Airports =await  _dropDownService.GetAirportDropDownAsync();
+           model.Aircrafts = await _dropDownService.GetAircraftDropDownAsync();
         }
 
-        private void FlightLoadDropdowns(FlightSearchViewModel model)
+        private async Task FlightLoadDropdowns(FlightSearchViewModel model)
         {
-            var airport = _context.Airports
-          .Select(a => new SelectListItem
-          {
-              Value = a.Id.ToString(),
-              Text = $"{a.Name} ({a.Code}) - {a.Country}"
-          })
-          .ToList();
-
-            model.DestinationAirports = airport;
-            model.OriginAirports = new List<SelectListItem>(airport);
+           await _dropDownService.GetAllAirportDropDownAsync(model);
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var flights = _context.Flights
-                .Include(f => f.OriginAirport)
-                .Include(f => f.DestinationAirport)
-                .Include(f => f.Aircraft)
-                .ToList();
+            var flights = await _flightService.GetAllWithDetailsAsync();
 
             return View(flights);
         }
 
 
         [HttpGet]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            
-                var model = new FlightViewModel();
-            LoadDropdowns(model);
+            var model = new FlightViewModel();
+            await LoadDropdowns(model);
             return View(model);
         }
 
@@ -80,34 +52,20 @@ namespace FlightReservationSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(FlightViewModel model)
         {
-            LoadDropdowns(model);
-
-            if (_context.Flights.Any(f => f.FlightNumber == model.FlightNumber))
-            {
-                ModelState.AddModelError("FlightNumber", "Flight number already exists.");
-            }
-
             if (!ModelState.IsValid)
             {
+                await LoadDropdowns(model);
                 return View(model);
-            }
-
-            var flight = new Flight
-            {
-                Id = Guid.NewGuid(),
-                FlightNumber = model.FlightNumber,
-                OriginAirportId = model.OriginAirportId,
-                DestinationAirportId = model.DestinationAirportId,
-                AircraftId = model.AircraftId,
-                EstimatedDuration = model.EstimatedDuration,
-                FlightDateTime = model.FlightDateTime
-            };
-
+            }  
 
             try
             {
-                _context.Flights.Add(flight);
-                await _context.SaveChangesAsync();
+               var success = await _flightService.AddAsync(model);
+                if (!success)
+                {
+                    ModelState.AddModelError("FlightNumber", "Flight number already exists.");
+                    return View(model);
+                }
                 return RedirectToAction("Index");
             }
             catch (Exception)
@@ -115,175 +73,129 @@ namespace FlightReservationSystem.Controllers
                 ModelState.AddModelError(string.Empty, "An error occurred while creating the flight.");
                 return View(model);
             }
-        
-
         }
 
         [HttpGet]
         public async Task<IActionResult> Edit(Guid id)
         {
-                var flight = await _context.Flights.FindAsync(id);
-                if (flight == null) return NotFound();
+               var flightViewModel =  await _flightService.GetEditAsync(id);
+            if(flightViewModel == null)
+            {
+                return NotFound();
+            }
 
-                var model = new FlightViewModel
-                {
-                    Id = flight.Id,
-                    FlightNumber = flight.FlightNumber,
-                    OriginAirportId = flight.OriginAirportId,
-                    DestinationAirportId = flight.DestinationAirportId,
-                    AircraftId = flight.AircraftId,
-                    EstimatedDuration = flight.EstimatedDuration,
-                    FlightDateTime = flight.FlightDateTime
-
-                };
-
-                LoadDropdowns(model);
-                return View(model);
+               await LoadDropdowns(flightViewModel);
+               return View(flightViewModel);
         }
 
-        [HttpPost]
+       [HttpPost]
         public async Task<IActionResult> Edit(FlightViewModel model)
         {
             if (!ModelState.IsValid)
             {
-                LoadDropdowns(model);
+               await LoadDropdowns(model);
                 return View(model);
             }
 
-            var flight = await _context.Flights.FindAsync(model.Id);
-            if (flight == null) return NotFound();
-
-            flight.FlightNumber = model.FlightNumber;
-            flight.OriginAirportId = model.OriginAirportId;
-            flight.DestinationAirportId = model.DestinationAirportId;
-            flight.AircraftId = model.AircraftId;
-            flight.EstimatedDuration = model.EstimatedDuration;
-            flight.FlightDateTime = model.FlightDateTime;
-
-
             try
             {
-                _context.Flights.Update(flight);
-                await _context.SaveChangesAsync();
+               await _flightService.UpdateAsync(model);
                 return RedirectToAction("Index");
             }
             catch (Exception)
             {
                 ModelState.AddModelError(string.Empty, "An error occurred while updating the flight.");
-                LoadDropdowns(model);
+                await LoadDropdowns(model);
                 return View(model);
             }
         }
 
 
         [HttpPost]
-        public async Task<IActionResult> Delete(Guid id)
-        {
-            var flight = await _context.Flights.FindAsync(id);
-            if (flight == null)
-                return NotFound();
+         public async Task<IActionResult> Delete(Guid id)
+         {
+             if (id == Guid.Empty)
+                 return NotFound();
 
-            _context.Flights.Remove(flight);
+             try
+             {
+                 var success = await _flightService.DeleteAsync(id);
+                 if (!success)
+                 {
+                     return NotFound(); 
+                 }
 
-            try
-            {
-                await _context.SaveChangesAsync();
-                return RedirectToAction("Index");
-            }
-            catch (Exception)
-            {
-                return View("Error", new ErrorViewModel { Message = "An error occurred while deleting the flight." });
-            }
-        }
+                 TempData["SuccessMessage"] = "Flight deleted successfully!";
+                 return RedirectToAction("Index");
+             }
+             catch (Exception)
+             {
+                 return View("Error", new ErrorViewModel
+                 {
+                     Message = "An error occurred while deleting the flight."
+                 });
+             }
+         }
 
-        [HttpGet]
-        public IActionResult FlightSearch()
+         [HttpGet]
+        public async Task<IActionResult> FlightSearch()
         {
             var model = new FlightSearchViewModel();
-            FlightLoadDropdowns(model);
+            await FlightLoadDropdowns(model);
             return View(model);
         }
 
-        [HttpPost]
-        public IActionResult FLightSearch(FlightSearchViewModel model)
-        {
-
-            if (model.IsRoundTrip && !model.ReturnDate.HasValue)
+          [HttpPost]
+            public async Task<IActionResult> FLightSearch(FlightSearchViewModel model)
             {
-                ModelState.AddModelError("ReturnDate", "Return date is required for round trip.");
+
+                if (model.IsRoundTrip && !model.ReturnDate.HasValue)
+                {
+                    ModelState.AddModelError("ReturnDate", "Return date is required for round trip.");
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    await FlightLoadDropdowns(model);
+                    return View(model);
+                }
+                if (!model.IsRoundTrip)
+                {
+                    // Clear ReturnDate errors if it is not selected
+                    ModelState.Remove(nameof(model.ReturnDate));
+                }
+
+                var updatedModel = await _flightService.FlightSearch(model);
+                TempData["Flights"] = JsonConvert.SerializeObject(updatedModel.MatchingFlights);
+                TempData["IsRoundTrip"] = updatedModel.IsRoundTrip.ToString();
+                TempData["ReturnFlights"] = JsonConvert.SerializeObject(updatedModel.ReturnFlights);
+                return RedirectToAction("AvailableFlight");
             }
 
-          
-            if (!ModelState.IsValid)
+            [HttpGet]
+            public IActionResult AvailableFlight()
             {
-                FlightLoadDropdowns(model);
+                if (TempData["Flights"] is not string outboundData)
+                    return RedirectToAction("FlightSearch");
+
+                var outboundFlights = JsonConvert.DeserializeObject<List<Flight>>(outboundData);
+                var returnFlights = TempData["ReturnFlights"] is string returnData
+                    ? JsonConvert.DeserializeObject<List<Flight>>(returnData)
+                    : new List<Flight>();
+
+                bool isRoundTrip = TempData["IsRoundTrip"] is string roundTripFlag && bool.TryParse(roundTripFlag, out bool result) && result;
+
+                var model = new FlightSearchResultViewModel
+                {
+                    OutboundFlights = outboundFlights,
+                    ReturnFlights = returnFlights,
+                    IsRoundTrip = isRoundTrip
+                };
+                Console.WriteLine($"Return flights: {model.ReturnFlights.Count}");
+
+
                 return View(model);
             }
-            if (!model.IsRoundTrip)
-            {
-                // Clear ReturnDate errors if it is not selected
-                ModelState.Remove(nameof(model.ReturnDate));
-            }
-
-           
-            var originId = Guid.Parse(model.SelectedOriginAirportId);
-            var destinationId = Guid.Parse(model.SelectedDestinationAirportId);
-
-            model.MatchingFlights = _context.Flights
-            .Include(f => f.OriginAirport)
-            .Include(f => f.DestinationAirport)
-            .Include(f => f.Aircraft)
-            .Where(f =>
-                f.OriginAirportId == originId &&
-                f.DestinationAirportId ==destinationId&&
-                f.FlightDateTime.Date == model.DepartureDate.Date
-            ).ToList();
-
-            Console.WriteLine("IsRoundTrip: " + model.IsRoundTrip);
-            // If round trip and return date is selected, get return flights
-            if (model.IsRoundTrip && model.ReturnDate.HasValue)
-            {
-                model.ReturnFlights = _context.Flights
-                    .Include(f => f.OriginAirport)
-                    .Include(f => f.DestinationAirport)
-                    .Include(f => f.Aircraft)
-                    .Where(f =>
-                        f.OriginAirportId == destinationId &&
-                        f.DestinationAirportId == originId &&
-                        f.FlightDateTime.Date == model.ReturnDate.Value.Date)
-                    .ToList();
-            }
-            TempData["Flights"] = JsonConvert.SerializeObject(model.MatchingFlights);
-            TempData["IsRoundTrip"] = model.IsRoundTrip.ToString();
-            TempData["ReturnFlights"] = JsonConvert.SerializeObject(model.ReturnFlights);
-            return RedirectToAction("AvailableFlight");
-        }
-
-        [HttpGet]
-        public IActionResult AvailableFlight()
-        {
-            if (TempData["Flights"] is not string outboundData)
-                return RedirectToAction("FlightSearch");
-
-            var outboundFlights = JsonConvert.DeserializeObject<List<Flight>>(outboundData);
-            var returnFlights = TempData["ReturnFlights"] is string returnData
-                ? JsonConvert.DeserializeObject<List<Flight>>(returnData)
-                : new List<Flight>();
-
-            bool isRoundTrip = TempData["IsRoundTrip"] is string roundTripFlag && bool.TryParse(roundTripFlag, out bool result) && result;
-
-            var model = new FlightSearchResultViewModel
-            {
-                OutboundFlights = outboundFlights,
-                ReturnFlights = returnFlights,
-                IsRoundTrip = isRoundTrip
-            };
-            Console.WriteLine($"Return flights: {model.ReturnFlights.Count}");
-
-
-            return View(model);
-        }
-
 
     }
 }

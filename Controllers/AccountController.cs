@@ -218,7 +218,7 @@ namespace FlightReservationSystem.Controllers
                
                     else
                     {
-                        return RedirectToAction("Index", "home");
+                        return RedirectToAction("FlightSearch", "flight");
                     }
                 }
 
@@ -231,6 +231,12 @@ namespace FlightReservationSystem.Controllers
             }
 
             return View(model); // If validation fails, re-show form with errors
+        }
+
+        public async Task<IActionResult> Logout()
+        {
+            await _signInManager.SignOutAsync();
+            return RedirectToAction("Login", "Account");
         }
 
     }

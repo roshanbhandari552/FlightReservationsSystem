@@ -28,7 +28,6 @@
 
   <ItemGroup>
     <Folder Include="Repositories\NewFolder\" />
-    <Folder Include="Services\Flight\" />
   </ItemGroup>
 
 </Project>
