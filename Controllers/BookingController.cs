@@ -1,5 +1,6 @@
 ﻿using FlightReservationSystem.Models;
 using FlightReservationSystem.ViewModel;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Models;
@@ -9,17 +10,20 @@ namespace FlightReservationSystem.Controllers
     public class BookingController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public BookingController(AppDbContext context)
+        public BookingController(AppDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
         [HttpGet]
-        public IActionResult CreateBooking(Guid flightId)
+        public async Task<IActionResult> CreateBooking(Guid flightId)
         {
+            var user = await _userManager.GetUserAsync(User);
             var model = new BookingViewModel
             {
-                UserId = "fdde5d5c-f408-409d-9f36-bab8e5135f0a",
+                UserId = user.Id,
                 FlightId = flightId,
 
                 Passengers = new List<PassengerViewModel>
@@ -41,9 +45,16 @@ namespace FlightReservationSystem.Controllers
                 // Reload the form with validation messages
                 return View(model);
             }
+            var flight = await _context.Flights.FindAsync(model.FlightId);
+            if (flight == null)
+            {
+                ModelState.AddModelError("", "The selected flight does not exist.");
+                return View(model);
+            }
 
             try
             {
+                var user = await _userManager.GetUserAsync(User);
                 // Generate a unique Booking ID
                 var bookingId = Guid.NewGuid();
 
@@ -98,6 +109,35 @@ namespace FlightReservationSystem.Controllers
                 return NotFound();
 
             return View(booking);
+        }
+
+        public async Task<IActionResult> MyBooking()
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            var bookings = await _context.Bookings
+                .Include(b => b.Flight)
+                .ThenInclude(f => f.OriginAirport)
+                .Include(b => b.Flight.DestinationAirport)
+                 .Include(b => b.Passengers)
+                .Where(b => b.UserId == user.Id)
+                .ToListAsync();
+
+            return View(bookings);
+        }
+
+        public async Task<IActionResult> AllBooking()
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            var bookings = await _context.Bookings
+                .Include(b => b.Flight)
+                .ThenInclude(f => f.OriginAirport)
+                .Include(b => b.Flight.DestinationAirport)
+                 .Include(b => b.Passengers)
+                .ToListAsync();
+
+            return View(bookings);
         }
 
 

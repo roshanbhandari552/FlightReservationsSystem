@@ -1,12 +1,18 @@
 ﻿using Azure.Identity;
 using FlightReservationSystem.Models;
 using FlightReservationSystem.ViewModel;
+using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Models;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Security.Claims;
+using static FlightReservationSystem.Services.UserAccountServ.IUserAccountService;
+using FlightReservationSystem.Services.UserAccountServ;
 
 namespace FlightReservationSystem.Controllers
 {
@@ -14,45 +20,38 @@ namespace FlightReservationSystem.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
-        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
+        private readonly IUserAccountService _userAccountService;
+        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IUserAccountService userAccountService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _userAccountService = userAccountService;
         }
         [HttpGet]
         public IActionResult Register()
         {
-            var model = new Employee();
+            var model = new RegisterViewModel();
             return View();
         }
 
         [HttpPost]
-        public async Task<IActionResult> Register(Employee model)
+        public async Task<IActionResult> Register(RegisterViewModel model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var (IsSuccessful, Errors) = await _userAccountService.RegisterUserAsync(model);
+
+            if (IsSuccessful)
             {
-                var user = new ApplicationUser { FirstName = model.FirstName, Email = model.Email, UserName = model.Email };
-                var result = await _userManager.CreateAsync(user, model.Password);
-
-                if (result.Succeeded)
-                {
-                    /*ViewBag.successMessage = "Registration Successfully";*/
-                    TempData["SuccessMessage"] = "Registration Successful";
-
-                    await _signInManager.SignInAsync(user, isPersistent: false);
-                    return RedirectToAction("Register");
-                }
-
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError("", error.Description);
-                }
-                // Save the employee or register logic here
-                // You can use _context.Employees.Add(model); if using EF
-                return View(); // or wherever you want to go
+                TempData["SuccessMessage"] = "Registration Successful";
+                return RedirectToAction("Register");
             }
 
-            return View(model); // If validation fails, re-show form with errors
+            foreach (var error in Errors)
+                ModelState.AddModelError(string.Empty, error);
+
+            return View(model);
         }
 
 
@@ -186,6 +185,18 @@ namespace FlightReservationSystem.Controllers
             }
         }
 
+        //Return url
+        private IActionResult RedirectToLocal(string returnUrl)
+        {
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+
+            // fallback if returnUrl is null or invalid
+            return RedirectToAction("FlightSearch", "Flight");
+        }
+
         [HttpGet]
       
         public IActionResult Login(string returnUrl = null)
@@ -202,35 +213,90 @@ namespace FlightReservationSystem.Controllers
 
             if (ModelState.IsValid)
             {
-               
-
                 var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, false);
 
                 if (result.Succeeded)
                 {
-                    if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-                    {
-
-
-                        /*ViewBag.successMessage = "Registration Successfully";*/
-                        return Redirect(returnUrl);
-                    }                 
-               
-                    else
-                    {
-                        return RedirectToAction("Index", "home");
-                    }
+                   return RedirectToLocal(returnUrl);
                 }
 
 
                 ModelState.AddModelError(String.Empty, "Invalid Login");
-
-                // Save the employee or register logic here
-                // You can use _context.Employees.Add(model); if using EF
-                return View(); // or wherever you want to go
+                return View();
             }
 
             return View(model); // If validation fails, re-show form with errors
+        }
+
+        [HttpGet]
+        public IActionResult GoogleLogin(string returnUrl = null)
+        {
+            var redirectUrl = Url.Action("GoogleResponse", "Account", new { returnUrl });
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties(GoogleDefaults.AuthenticationScheme, redirectUrl);
+            return Challenge(properties, GoogleDefaults.AuthenticationScheme);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GoogleResponse(string returnUrl = null)
+        {
+            // Get login info from Google
+            var info = await _signInManager.GetExternalLoginInfoAsync();
+            if (info == null)
+                return RedirectToAction("Login");
+
+            // Try to log in the user if they already have an external login
+            var signInResult = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false);
+            if (signInResult.Succeeded)
+                return RedirectToLocal(returnUrl);
+
+            // If user doesn't exist yet, get email and create them
+            var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+            var name = info.Principal.FindFirstValue(ClaimTypes.Name);
+            var firstName = info.Principal.FindFirstValue(ClaimTypes.GivenName);
+            var lastName = info.Principal.FindFirstValue(ClaimTypes.Surname);
+
+            if (email != null)
+            {
+                // Check if user exists in DB by email
+                var user = await _userManager.FindByEmailAsync(email);
+                if (user == null)
+                {
+                    user = new ApplicationUser
+                    {
+                        UserName = email,
+                        Email = email,
+                        FirstName = firstName,
+                        LastName = lastName
+                        // You can add name or other fields if needed
+                    };
+
+                    var createResult = await _userManager.CreateAsync(user);
+                    if (!createResult.Succeeded)
+                    {
+                        ModelState.AddModelError(string.Empty, "Failed to create user.");
+                        return RedirectToAction("Login");
+                    }
+
+                    // Link Google login to the newly created user
+                    await _userManager.AddLoginAsync(user, info);
+                }
+
+                // Sign in the user
+                await _signInManager.SignInAsync(user, isPersistent: false);
+                return RedirectToLocal(returnUrl);
+            }
+
+            // If email is missing, fail
+            ModelState.AddModelError(string.Empty, "Email claim not received.");
+            return RedirectToAction("Login");
+        }
+
+
+        public async Task<IActionResult> Logout()
+        {
+            await _signInManager.SignOutAsync();
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Login", "Account");
         }
 
     }

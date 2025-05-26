@@ -1,0 +1,71 @@
+﻿
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark py-1">
+    <div class="container-fluid">
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Flight" asp-action="FlightSearch">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Flight" asp-action="List">Flights</a>
+                </li>
+
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Booking" asp-action="MyBooking">View Bookings</a>
+                    </li>
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="manageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Manage
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark">
+                                <li><a class="dropdown-item" asp-controller="account" asp-action="User">Manage Users</a></li>
+                                <li><a class="dropdown-item" asp-controller="administration" asp-action="ListRole">Manage Roles</a></li>
+                            </ul>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Booking" asp-action="AllBooking">View All Bookings</a>
+                        </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="manageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Create
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark">
+                                <li><a class="dropdown-item" asp-controller="airport" asp-action="Index">Airport</a></li>
+                                <li><a class="dropdown-item" asp-controller="aircraft" asp-action="Index">Aircraft</a></li>
+                                <li><a class="dropdown-item" asp-controller="flight" asp-action="Index">Flight</a></li>
+                            </ul>
+                        </li>
+                    }
+                }
+            </ul>
+
+            <ul class="navbar-nav ms-auto">
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <li class="nav-item">
+                        <a class="nav-link disabled">@User.Identity.Name</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Account" asp-action="Logout">Logout</a>
+                    </li>
+                }
+                else
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Account" asp-action="Register">Register</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Account" asp-action="Login">Login</a>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+</nav>

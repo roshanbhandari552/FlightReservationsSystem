@@ -8,7 +8,7 @@ namespace FlightReservationSystem.ViewModel
     [DifferentAirportsAttribute]
     public class FlightSearchViewModel
     {
-
+    
         [Required(ErrorMessage = "Please select a departure date.")]
         [DataType(DataType.Date)]
         public DateTime DepartureDate { get; set; }

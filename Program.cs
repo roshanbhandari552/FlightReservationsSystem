@@ -1,8 +1,15 @@
 using FlightReservationSystem.Models;
 using FlightReservationSystem.Repositories.AircraftRepo;
 using FlightReservationSystem.Repositories.AirportRwpo;
+using FlightReservationSystem.Repositories.FlightRepo;
 using FlightReservationSystem.Services.AircraftServ;
 using FlightReservationSystem.Services.AirportServ;
+using FlightReservationSystem.Services.DropDownServices;
+using FlightReservationSystem.Services.FlightServ;
+using FlightReservationSystem.Services.UserAccountServ;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
+
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Models;
@@ -22,6 +29,31 @@ builder.Services.AddScoped<IAircraftServices, AircraftServices>();
 
 builder.Services.AddScoped<IAirportRepository, AirportRepository>();
 builder.Services.AddScoped<IAirportService, AirportService>();
+
+builder.Services.AddScoped<IDropDownService, DropDownService>();
+
+builder.Services.AddScoped<IFlightRepository, FlightRepository>();
+builder.Services.AddScoped<IFlightService, FlightService>();
+
+builder.Services.AddScoped<IUserAccountService, UserAccountService>();
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
+})
+.AddCookie(options =>
+{
+    options.LoginPath = "/Account/Login";
+    options.ExpireTimeSpan = TimeSpan.FromDays(30);  //Keep user logged in for 30 days
+    options.SlidingExpiration = true;                //Reset expiration with activity
+})
+.AddGoogle(options =>
+{
+    options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+    options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+});
+
 
 
 
@@ -47,8 +79,10 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/Account/AccessDenied"; // optional
 });
 
-var app = builder.Build();
 
+
+
+var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -63,6 +97,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(

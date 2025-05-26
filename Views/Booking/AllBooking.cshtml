@@ -1,0 +1,49 @@
+﻿@model List<FlightReservationSystem.Models.Booking>
+
+@{
+    ViewData["Title"] = "My Bookings";
+}
+
+<h2 class="mt-4 mb-3">My Bookings</h2>
+
+@if (Model == null || !Model.Any())
+{
+    <div class="alert alert-info"> No bookings yet.</div>
+}
+else
+{
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Flight</th>
+                <th>Email</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Booking Date</th>
+                <th>Passengers</th>
+                <th>Payment Method</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var booking in Model)
+            {
+                <tr>
+                    <td>@booking.Flight?.FlightNumber</td>
+                    <td>@booking.Email</td>
+                    <td>@booking.Flight?.OriginAirport?.Name</td>
+                    <td>@booking.Flight?.DestinationAirport?.Name</td>
+                    <td>@booking.BookingDate.ToShortDateString()</td>
+                    <td>
+                        <ul class="list-unstyled mb-0">
+                            @foreach (var passenger in booking.Passengers)
+                            {
+                                <li>@passenger.FullName  - (@passenger.PassportNumber)</li>
+                            }
+                        </ul>
+                    </td>
+                    <td>@booking.PaymentMethod</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

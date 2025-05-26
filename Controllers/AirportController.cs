@@ -62,7 +62,7 @@ namespace FlightReservationSystem.Controllers
 
                 try
                 {
-                    airportService.AddAsync(model);
+                    await airportService.AddAsync(model);
                    
                     TempData["SuccessMessage"] = "Airport created successfully!";
                     return RedirectToAction("Index");
