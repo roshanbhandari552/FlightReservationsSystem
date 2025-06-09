@@ -1,10 +1,18 @@
 ﻿@using FlightReservationSystem.ViewModel
 @model RegisterViewModel
-@{
-    ViewData["Title"] = "Register";
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/Register.css" />
 }
 
-<h2>@ViewData["Title"]</h2>
+
+@{
+    ViewData["Title"] = "Register";
+    ViewData["HideNav"] = true;
+}
+
+<h2>Sign Up</h2>
+<p>Please fill in this form to create an account</p>
 
 <form method="post">
     <div asp-validation-summary="All" class="text-danger"></div>
