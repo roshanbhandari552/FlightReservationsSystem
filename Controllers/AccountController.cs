@@ -19,14 +19,13 @@ namespace FlightReservationSystem.Controllers
     public class AccountController : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IUserAccountService _userAccountService;
-        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IUserAccountService userAccountService)
+        public AccountController(UserManager<ApplicationUser> userManager, IUserAccountService userAccountService)
         {
             _userManager = userManager;
-            _signInManager = signInManager;
             _userAccountService = userAccountService;
         }
+
         [HttpGet]
         public IActionResult Register()
         {
@@ -53,91 +52,59 @@ namespace FlightReservationSystem.Controllers
 
             return View(model);
         }
-
+    
 
         [HttpGet]
         public IActionResult User()
         {
-            var user = _userManager.Users.ToList();
+            var user = _userAccountService.GetUsers();
             return View(user);
         }
 
         [HttpGet]
         public async Task<IActionResult> EditUser (string id)
         {
-            var user = await _userManager.FindByIdAsync(id);
-            if(user == null)
+            var viewModel = await _userAccountService.GetEditUserViewModelAsync(id);
+            if (viewModel == null)
             {
                 ViewBag.error = "Error";
                 return View("NotFound", "Administration");
             }
-            var editUserViewModel = new EditUserViewModel
-            {
-                Id = user.Id,
-                FirstName = user.FirstName,
-                Email = user.UserName
-            };
-
-            return View(editUserViewModel);
+            return View(viewModel);
         }
 
         [HttpPost]
-        public async Task<IActionResult> EditUser(EditUserViewModel model, string id)
+        public async Task<IActionResult> EditUser(EditUserViewModel model)
         {
-            var user = await _userManager.FindByIdAsync(id);
-            if (user == null)
-            {
-                ViewBag.error = "Error";
-                return View("NotFound", "Administration");
-            }
-            else
-            {
-                user.FirstName = model.FirstName;
-                user.UserName = model.Email;
-                
-                var result = await _userManager.UpdateAsync(user);
+            if (!ModelState.IsValid)
+                return View(model);
 
-                if (result.Succeeded)
-                {
-                    return RedirectToAction("User");
-                }
-           
-                foreach(var error in result.Errors)
-                {
-                    ModelState.AddModelError("", error.Description);
-                }
-                
-                    }
+            var (IsSuccessful, Errors) = await _userAccountService.UpdateUserAsync(model);
+
+            if (IsSuccessful)
+            {
+                TempData["SuccessMessage"] = "User updated successfully.";
+                return RedirectToAction("User");
+            }
+
+            foreach (var error in Errors)
+                ModelState.AddModelError("", error);
 
             return View(model);
         }
 
         [HttpPost]
-        public async Task<IActionResult> DeleteUser( string id)
+        public async Task<IActionResult> DeleteUser(string id)
         {
-            var user = await _userManager.FindByIdAsync(id);
-            
-            if(user == null)
-            {
-                ViewBag.error = "Error";
-                return View("NotFound", "Administration");
-            }
+            var (IsSuccessful, Errors) = await _userAccountService.DeleteUserAsync(id);
 
-           
-                var result = await _userManager.DeleteAsync(user);
-
-            if (result.Succeeded)
-            {
+            if (IsSuccessful)
                 return RedirectToAction("User");
-            }
 
-            foreach(var error in result.Errors)
-            {
-                ModelState.AddModelError("", error.Description);
-            }
-            return RedirectToAction("EditUser", new { id = id });
+            foreach (var error in Errors)
+                ModelState.AddModelError("", error);
 
-
+            return RedirectToAction("EditUser", new { id });
         }
         /*
                 [HttpGet]
@@ -162,12 +129,7 @@ namespace FlightReservationSystem.Controllers
         [HttpGet]
         public async Task<IActionResult> SearchUsers(string query)
         {
-            var users = string.IsNullOrWhiteSpace(query)
-                ? await _userManager.Users.ToListAsync()
-                : await _userManager.Users
-                    .Where(u => u.UserName.Contains(query) || u.Email.Contains(query))
-                    .ToListAsync();
-
+            var users = await _userAccountService.SearchUsersAsync(query);
             return PartialView("UserPartial", users);
         }
 
@@ -198,7 +160,6 @@ namespace FlightReservationSystem.Controllers
         }
 
         [HttpGet]
-      
         public IActionResult Login(string returnUrl = null)
         {
             ViewData["ReturnUrl"] = returnUrl;
@@ -211,93 +172,38 @@ namespace FlightReservationSystem.Controllers
             ViewData["ReturnUrl"] = returnUrl;
             Console.WriteLine("Return URL: " + returnUrl);
 
-            if (ModelState.IsValid)
-            {
-                var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, false);
+            if (!ModelState.IsValid)
+                return View(model);
 
-                if (result.Succeeded)
-                {
-                   return RedirectToLocal(returnUrl);
-                }
+            var (IsSuccessful, ErrorMessage) = await _userAccountService.SignInAsync(model);
 
+            if (IsSuccessful)
+                return RedirectToLocal(returnUrl);
 
-                ModelState.AddModelError(String.Empty, "Invalid Login");
-                return View();
-            }
-
-            return View(model); // If validation fails, re-show form with errors
+            ModelState.AddModelError(string.Empty, ErrorMessage);
+            return View(model);
         }
 
         [HttpGet]
-        public IActionResult GoogleLogin(string returnUrl = null)
+        public IActionResult GoogleLogin(string returnUrl = "/")
         {
-            var redirectUrl = Url.Action("GoogleResponse", "Account", new { returnUrl });
-            var properties = _signInManager.ConfigureExternalAuthenticationProperties(GoogleDefaults.AuthenticationScheme, redirectUrl);
-            return Challenge(properties, GoogleDefaults.AuthenticationScheme);
+            var props = _userAccountService.ConfigureGoogleLogin(returnUrl);
+            return Challenge(props, GoogleDefaults.AuthenticationScheme);
         }
 
         [HttpGet]
-        public async Task<IActionResult> GoogleResponse(string returnUrl = null)
+        public async Task<IActionResult> GoogleResponse(string returnUrl = "/")
         {
-            // Get login info from Google
-            var info = await _signInManager.GetExternalLoginInfoAsync();
-            if (info == null)
-                return RedirectToAction("Login");
-
-            // Try to log in the user if they already have an external login
-            var signInResult = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false);
-            if (signInResult.Succeeded)
-                return RedirectToLocal(returnUrl);
-
-            // If user doesn't exist yet, get email and create them
-            var email = info.Principal.FindFirstValue(ClaimTypes.Email);
-            var name = info.Principal.FindFirstValue(ClaimTypes.Name);
-            var firstName = info.Principal.FindFirstValue(ClaimTypes.GivenName);
-            var lastName = info.Principal.FindFirstValue(ClaimTypes.Surname);
-
-            if (email != null)
-            {
-                // Check if user exists in DB by email
-                var user = await _userManager.FindByEmailAsync(email);
-                if (user == null)
-                {
-                    user = new ApplicationUser
-                    {
-                        UserName = email,
-                        Email = email,
-                        FirstName = firstName,
-                        LastName = lastName
-                        // You can add name or other fields if needed
-                    };
-
-                    var createResult = await _userManager.CreateAsync(user);
-                    if (!createResult.Succeeded)
-                    {
-                        ModelState.AddModelError(string.Empty, "Failed to create user.");
-                        return RedirectToAction("Login");
-                    }
-
-                    // Link Google login to the newly created user
-                    await _userManager.AddLoginAsync(user, info);
-                }
-
-                // Sign in the user
-                await _signInManager.SignInAsync(user, isPersistent: false);
-                return RedirectToLocal(returnUrl);
-            }
-
-            // If email is missing, fail
-            ModelState.AddModelError(string.Empty, "Email claim not received.");
-            return RedirectToAction("Login");
+            var (success, redirectUrl) = await _userAccountService.HandleGoogleResponseAsync(returnUrl);
+            return Redirect(redirectUrl);
         }
-
 
         public async Task<IActionResult> Logout()
         {
-            await _signInManager.SignOutAsync();
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            await _userAccountService.LogoutAsync(HttpContext);
             return RedirectToAction("Login", "Account");
         }
+
 
     }
 }

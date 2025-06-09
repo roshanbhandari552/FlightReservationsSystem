@@ -2,6 +2,7 @@ using FlightReservationSystem.Models;
 using FlightReservationSystem.Repositories.AircraftRepo;
 using FlightReservationSystem.Repositories.AirportRwpo;
 using FlightReservationSystem.Repositories.FlightRepo;
+using FlightReservationSystem.Repositories.UserAccountRepo;
 using FlightReservationSystem.Services.AircraftServ;
 using FlightReservationSystem.Services.AirportServ;
 using FlightReservationSystem.Services.DropDownServices;
@@ -35,7 +36,9 @@ builder.Services.AddScoped<IDropDownService, DropDownService>();
 builder.Services.AddScoped<IFlightRepository, FlightRepository>();
 builder.Services.AddScoped<IFlightService, FlightService>();
 
+builder.Services.AddScoped<IUserAccountRepository, UserAccountRepository>();
 builder.Services.AddScoped<IUserAccountService, UserAccountService>();
+
 
 builder.Services.AddAuthentication(options =>
 {

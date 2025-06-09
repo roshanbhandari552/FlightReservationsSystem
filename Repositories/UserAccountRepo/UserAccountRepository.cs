@@ -2,6 +2,7 @@
 using FlightReservationSystem.ViewModel;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using WebApplication1.Models;
 
 namespace FlightReservationSystem.Repositories.UserAccountRepo
@@ -10,47 +11,53 @@ namespace FlightReservationSystem.Repositories.UserAccountRepo
     {
 
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly SignInManager<ApplicationUser> _signInManager;
-        public UserAccountRepository(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
+
+        public UserAccountRepository(UserManager<ApplicationUser> userManager)
         {
             _userManager = userManager;
-            _signInManager = signInManager;
         }
 
-        public Task<IActionResult> DeleteUser(string id)
+        public List<ApplicationUser> GetAllUsers()
         {
-            throw new NotImplementedException();
+            return _userManager.Users.ToList();
         }
 
-        public Task<IActionResult> EditUser(string id)
+        public async Task<ApplicationUser?> GetUserByIdAsync(string id)
         {
-            throw new NotImplementedException();
+            return await _userManager.FindByIdAsync(id);
         }
 
-        public Task<IActionResult> EditUser(EditUserViewModel model, string id)
+        public async Task<IdentityResult> CreateUserAsync(ApplicationUser user, string password)
         {
-            throw new NotImplementedException();
+            return await _userManager.CreateAsync(user, password);
         }
 
-        public Task<IActionResult> IsEmailAvailable(string email)
+        public async Task<IdentityResult> UpdateUserAsync(ApplicationUser user)
+       => await _userManager.UpdateAsync(user);
+
+        public async Task<IdentityResult> DeleteUserAsync(ApplicationUser user)
+        => await _userManager.DeleteAsync(user);
+
+        public async Task<List<ApplicationUser>> SearchUsersAsync(string query)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrWhiteSpace(query))
+                return await _userManager.Users.ToListAsync();
+
+            return await _userManager.Users
+                .Where(u => u.UserName.Contains(query) || u.Email.Contains(query))
+                .ToListAsync();
         }
 
-        public Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
+        public async Task<ApplicationUser?> GetUserByEmailAsync(string email)
         {
-            throw new NotImplementedException();
+            return await _userManager.FindByEmailAsync(email);
         }
 
-        public async Task Register(Employee model)
+        public async Task<IdentityResult> AddLoginAsync(ApplicationUser user, UserLoginInfo info)
         {
-            var user = new ApplicationUser { FirstName = model.FirstName, Email = model.Email, UserName = model.Email };
-            var result = await _userManager.CreateAsync(user, model.Password);
+            return await _userManager.AddLoginAsync(user, info);
         }
 
-        public Task<IActionResult> SearchUsers(string query)
-        {
-            throw new NotImplementedException();
-        }
+
     }
 }
